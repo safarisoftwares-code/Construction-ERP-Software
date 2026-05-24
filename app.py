@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 import json
 import secrets
@@ -34,7 +34,7 @@ class User(UserMixin, db.Model):
     assigned_site_ids = db.Column(db.Text, default='[]')
     security_key = db.Column(db.String(100), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     __table_args__ = (db.UniqueConstraint('company_id', 'username', name='unique_company_username'),)
     
@@ -75,7 +75,7 @@ class Project(db.Model):
     invoice_history = db.Column(db.Text, default='[]')
     auto_expense_recorded = db.Column(db.Text, default='{"materialTotal":0,"workerTotal":0}')
     auto_income_recorded = db.Column(db.Float, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     def get_expenses(self): return json.loads(self.expenses) if self.expenses else []
     def set_expenses(self, val): self.expenses = json.dumps(val)
@@ -100,7 +100,7 @@ class PendingAdminRequest(db.Model):
     username = db.Column(db.String(50), nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     security_key = db.Column(db.String(100), nullable=False)
-    timestamp = db.Column(db.Float, default=lambda: datetime.utcnow().timestamp())
+    timestamp = db.Column(db.Float, default=lambda: datetime.now(timezone.utc).timestamp())
     expires_at = db.Column(db.Float, nullable=False)
 
 class CompanySetting(db.Model):
@@ -127,7 +127,7 @@ class Job(db.Model):
     location = db.Column(db.String(200))
     description = db.Column(db.Text)
     contact = db.Column(db.String(200))
-    date = db.Column(db.String(50), default=lambda: datetime.utcnow().isoformat())
+    date = db.Column(db.String(50), default=lambda: datetime.now(timezone.utc).isoformat())
 
 class Suggestion(db.Model):
     __tablename__ = 'suggestions'
@@ -135,7 +135,7 @@ class Suggestion(db.Model):
     company_id = db.Column(db.String(50), default='default')
     name = db.Column(db.String(100), default='Anonymous')
     text = db.Column(db.Text, nullable=False)
-    date = db.Column(db.String(50), default=lambda: datetime.utcnow().isoformat())
+    date = db.Column(db.String(50), default=lambda: datetime.now(timezone.utc).isoformat())
 
 # ============ TRAINING MODULE 1: WORKSHOP ============
 class Workshop(db.Model):
@@ -147,7 +147,7 @@ class Workshop(db.Model):
     location = db.Column(db.String(200))
     virtual_link = db.Column(db.String(500))
     available_seats = db.Column(db.Integer, default=10)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class WorkshopRegistration(db.Model):
     __tablename__ = 'workshop_registrations'
@@ -159,7 +159,7 @@ class WorkshopRegistration(db.Model):
     email = db.Column(db.String(100), nullable=False)
     department = db.Column(db.String(100))
     status = db.Column(db.String(20), default='pending')
-    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    registered_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 # ============ TRAINING MODULE 2: SECURITY ============
 class SecurityCourse(db.Model):
@@ -178,7 +178,7 @@ class SecurityProgress(db.Model):
     completed = db.Column(db.Boolean, default=False)
     quiz_score = db.Column(db.Integer, default=0)
     policy_accepted = db.Column(db.Boolean, default=False)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class SecurityRegistration(db.Model):
     __tablename__ = 'security_registrations'
@@ -188,7 +188,7 @@ class SecurityRegistration(db.Model):
     phone = db.Column(db.String(50))
     email = db.Column(db.String(100), nullable=False)
     department = db.Column(db.String(100))
-    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    registered_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 # ============ TRAINING MODULE 3: SAFETY ============
 class SafetyCourse(db.Model):
@@ -211,7 +211,7 @@ class SafetyProgress(db.Model):
     certificate_pdf = db.Column(db.Text, default='')
     expiry_date = db.Column(db.DateTime)
     last_reminder_sent = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class SafetyRegistration(db.Model):
     __tablename__ = 'safety_registrations'
@@ -221,7 +221,7 @@ class SafetyRegistration(db.Model):
     phone = db.Column(db.String(50))
     email = db.Column(db.String(100), nullable=False)
     department = db.Column(db.String(100))
-    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    registered_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 # ============ Helper Functions ============
 def login_required(role=None):
@@ -317,7 +317,7 @@ def signup():
             username=username,
             password_hash=generate_password_hash(password),
             security_key=security_key,
-            expires_at=(datetime.utcnow() + timedelta(minutes=5)).timestamp()
+            expires_at=(datetime.now(timezone.utc) + timedelta(minutes=5)).timestamp()
         )
         db.session.add(pending)
         db.session.commit()
@@ -434,7 +434,6 @@ def update_project(project_id):
     if not project:
         return jsonify({'success': False, 'error': 'Project not found'}), 404
     data = request.json
-    # Use the setter methods for JSON fields to convert lists to JSON strings
     if 'expenses' in data:
         project.set_expenses(data['expenses'])
     if 'incomes' in data:
@@ -449,7 +448,6 @@ def update_project(project_id):
         project.set_invoice_history(data['invoiceHistory'])
     if 'autoExpenseRecorded' in data:
         project.set_auto_expense_recorded(data['autoExpenseRecorded'])
-    # Simple fields
     if 'manualTotalPaid' in data:
         project.manual_total_paid = data['manualTotalPaid']
     if 'autoIncomeRecorded' in data:
@@ -508,7 +506,7 @@ def update_user_sites(user_id):
 @app.route('/api/pending_requests', methods=['GET'])
 @login_required(role='system_admin')
 def get_pending_requests():
-    now = datetime.utcnow().timestamp()
+    now = datetime.now(timezone.utc).timestamp()
     requests = PendingAdminRequest.query.filter(PendingAdminRequest.expires_at > now).all()
     result = [{'id': r.id, 'fullName': r.full_name, 'username': r.username,
                'timestamp': r.timestamp, 'expiresAt': r.expires_at} for r in requests]
@@ -870,8 +868,8 @@ def get_security_progress():
     progress = SecurityProgress.query.all()
     result = []
     for p in progress:
-        user = User.query.get(p.user_id)
-        course = SecurityCourse.query.get(p.course_id)
+        user = db.session.get(User, p.user_id)
+        course = db.session.get(SecurityCourse, p.course_id)
         result.append({'user': user.username if user else 'Unknown', 'course': course.title if course else 'Unknown',
                        'completed': p.completed, 'score': p.quiz_score, 'policy_accepted': p.policy_accepted})
     return jsonify({'progress': result})
@@ -916,7 +914,7 @@ def complete_safety_course(course_id):
         db.session.add(prog)
     prog.completed = True
     prog.quiz_score = score
-    prog.expiry_date = datetime.utcnow() + timedelta(days=course.expiry_days)
+    prog.expiry_date = datetime.now(timezone.utc) + timedelta(days=course.expiry_days)
     prog.certificate_pdf = f"Certificate for {course.title} - {current_user.username}"
     db.session.commit()
     return jsonify({'success': True, 'expiry': prog.expiry_date.isoformat()})
@@ -979,8 +977,8 @@ def get_safety_progress():
     progress = SafetyProgress.query.all()
     result = []
     for p in progress:
-        user = User.query.get(p.user_id)
-        course = SafetyCourse.query.get(p.course_id)
+        user = db.session.get(User, p.user_id)
+        course = db.session.get(SafetyCourse, p.course_id)
         result.append({'user': user.username if user else 'Unknown', 'course': course.title if course else 'Unknown',
                        'completed': p.completed, 'score': p.quiz_score, 'expiry': p.expiry_date.isoformat() if p.expiry_date else None})
     return jsonify({'progress': result})
@@ -991,12 +989,20 @@ def add_missing_columns():
     conn = sqlite3.connect('erp_system.db')
     cursor = conn.cursor()
     try:
-        cursor.execute("PRAGMA table_info(workshop_registrations)")
-        columns = [col[1] for col in cursor.fetchall()]
-        if 'worker_id' not in columns:
-            cursor.execute("ALTER TABLE workshop_registrations ADD COLUMN worker_id VARCHAR(50)")
-            conn.commit()
-            print("Added worker_id column to workshop_registrations")
+        # Check if the table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='workshop_registrations'")
+        table_exists = cursor.fetchone() is not None
+        if table_exists:
+            cursor.execute("PRAGMA table_info(workshop_registrations)")
+            columns = [col[1] for col in cursor.fetchall()]
+            if 'worker_id' not in columns:
+                cursor.execute("ALTER TABLE workshop_registrations ADD COLUMN worker_id VARCHAR(50)")
+                conn.commit()
+                print("✅ Added worker_id column to workshop_registrations")
+            else:
+                print("worker_id column already exists")
+        else:
+            print("workshop_registrations table not yet created – will be created by db.create_all()")
     except Exception as e:
         print(f"Migration error: {e}")
     finally:
