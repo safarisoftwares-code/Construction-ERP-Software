@@ -989,7 +989,6 @@ def add_missing_columns():
     conn = sqlite3.connect('erp_system.db')
     cursor = conn.cursor()
     try:
-        # Check if the table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='workshop_registrations'")
         table_exists = cursor.fetchone() is not None
         if table_exists:
@@ -1011,7 +1010,6 @@ def add_missing_columns():
 # ============ Initialize Database ============
 with app.app_context():
     db.create_all()
-    # Run migration to add missing column
     add_missing_columns()
     
     if not User.query.filter_by(role='system_admin').first():
@@ -1023,10 +1021,12 @@ with app.app_context():
             role='system_admin',
             security_key='system123'
         )
-        admin.set_password('System@2025')
+        # Read admin password from environment variable, fallback to default
+        admin_password = os.environ.get('ADMIN_PASSWORD', 'System@2025')
+        admin.set_password(admin_password)
         db.session.add(admin)
         db.session.commit()
-        print("✅ System Admin created: systemadmin / System@2025")
+        print("✅ System Admin created: systemadmin (password from environment variable)")
     
     # Demo workshops
     if Workshop.query.count() == 0:
@@ -1084,7 +1084,7 @@ if __name__ == '__main__':
     print("="*60)
     print("\n📌 LOGIN CREDENTIALS:")
     print("   Username: systemadmin")
-    print("   Password: System@2025")
+    print("   Password: " + os.environ.get('ADMIN_PASSWORD', 'System@2025'))
     print("\n🌐 Open: http://localhost:5000")
     print("="*60 + "\n")
     app.run(debug=True, host='127.0.0.1', port=5000)
