@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Company ERP | Secure Construction Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: #eef2f5; padding: 20px; }
+        .app-container { max-width: 1600px; margin: 0 auto; background: white; border-radius: 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15); overflow: hidden; position: relative; z-index: 1; }
+        .app-header { background: #0b2b3b; color: white; padding: 12px 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; }
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .company-logo { width: 50px; height: 50px; object-fit: contain; background: white; border-radius: 8px; padding: 4px; }
+        .company-logo-placeholder { width: 50px; height: 50px; background: #1f4e6e; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; border: 1px dashed #fff; }
+        .company-text { display: flex; flex-direction: column; }
+        .company-text h1 { font-size: 1.3rem; font-weight: 600; letter-spacing: -0.3px; margin: 0; line-height: 1.3; }
+        .company-text p { font-size: 0.7rem; opacity: 0.85; margin-top: 2px; }
+        .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+        .company-settings, .logout-btn, .user-mgmt-btn { background: #1f4e6e; padding: 6px 12px; border-radius: 40px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; border: none; color: white; }
+        .company-settings:hover, .logout-btn:hover, .user-mgmt-btn:hover { background: #2c6e8f; }
+        .security-badge { background: #1a5d7a; padding: 6px 12px; border-radius: 40px; font-size: 0.7rem; }
+        .role-indicator { background: #f39c12; padding: 4px 12px; border-radius: 40px; font-size: 0.65rem; font-weight: bold; }
+        .main-tabs { display: flex; background: #f4f7fc; border-bottom: 1px solid #cfdfed; padding-left: 20px; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .main-tab-btn { background: transparent; border: none; padding: 14px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; color: #2c5a74; border-radius: 30px 30px 0 0; transition: all 0.2s; }
+        .main-tab-btn:hover { background: rgba(31, 110, 108, 0.1); }
+        .main-tab-btn.active { background: white; color: #0f4c5f; border-bottom: 3px solid #0f6b7c; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-btn { background: transparent; border: none; padding: 14px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; color: #2c5a74; border-radius: 30px 30px 0 0; transition: all 0.2s; font-family: inherit; }
+        .dropdown-btn:hover { background: rgba(31, 110, 108, 0.1); }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 220px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 10; border-radius: 12px; overflow: hidden; top: 100%; left: 0; }
+        .dropdown-content button { color: #2c5a74; padding: 12px 16px; text-decoration: none; display: block; width: 100%; text-align: left; background: white; border: none; border-radius: 0; font-weight: 500; cursor: pointer; }
+        .dropdown-content button:hover { background-color: #eef2f7; color: #0f4c5f; }
+        .dropdown:hover .dropdown-content { display: block; }
+        .panel { display: none; padding: 28px 26px; animation: fade 0.2s ease; }
+        .panel.active-panel { display: block; }
+        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+        .projects-grid { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
+        .project-card { background: white; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 350px; padding: 16px; border-left: 6px solid #2c8c6e; transition: 0.2s; }
+        .project-card.completed-card { border-left-color: #f39c12; opacity: 0.85; }
+        .project-card.terminated-card { border-left-color: #e74c3c; opacity: 0.7; }
+        .project-name { font-size: 1.3rem; font-weight: bold; }
+        .project-meta { font-size: 0.8rem; color: #4b6a7c; margin: 8px 0; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; margin-top: 8px; }
+        .status-active { background: #2c8c6e; color: white; }
+        .status-completed { background: #f39c12; color: white; }
+        .status-terminated { background: #e74c3c; color: white; }
+        .profit-badge { background: #e2f0e8; padding: 6px 12px; border-radius: 28px; font-size: 0.8rem; font-weight: bold; display: inline-block; margin-top: 8px; }
+        .stars-5, .stars-6 { font-size: 1rem; letter-spacing: 2px; color: #f39c12; }
+        .card-buttons { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .open-btn { background: #0f5b6e; padding: 12px 20px; font-size: 0.95rem; flex: 2; text-align: center; border-radius: 40px; font-weight: bold; cursor: pointer; border: none; color: white; }
+        .action-buttons-group { display: flex; gap: 8px; flex: 1.2; }
+        .action-small { padding: 8px 12px; font-size: 0.75rem; flex: 1; text-align: center; border-radius: 32px; cursor: pointer; border: none; color: white; }
+        .complete-btn { background: #f39c12; }
+        .terminate-btn { background: #e74c3c; }
+        .archived-buttons { margin-top: 12px; display: flex; gap: 10px; }
+        .view-btn, .restore-archived-btn { padding: 10px 16px; flex: 1; text-align: center; border-radius: 40px; cursor: pointer; border: none; color: white; }
+        .view-btn { background: #0f5b6e; }
+        .restore-archived-btn { background: #2c8c6e; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; align-items: flex-end; }
+        .form-group { flex: 1; min-width: 150px; position: relative; }
+        label { font-weight: 600; display: block; margin-bottom: 5px; font-size: 0.8rem; color: #1f5068; }
+        input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbdbe2; border-radius: 14px; font-size: 0.9rem; }
+        .password-wrapper { position: relative; }
+        .password-wrapper input { padding-right: 40px; }
+        .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; background: none; border: none; font-size: 1.1rem; width: auto; padding: 0; }
+        .toggle-password:hover { color: #1f6e6c; }
+        button { background: #1f6e6c; color: white; border: none; padding: 10px 18px; border-radius: 40px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.85; }
+        table { width: 100%; border-collapse: collapse; margin: 18px 0; background: white; border-radius: 20px; overflow-x: auto; display: block; }
+        th, td { border: 1px solid #dde4ec; padding: 10px 8px; text-align: left; font-size: 0.85rem; }
+        th { background: #eef3fa; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 10000; overflow: auto; padding: 30px; }
+        .modal-content { max-width: 1300px; margin: 20px auto; background: white; border-radius: 32px; padding: 24px; position: relative; }
+        .modal-small { max-width: 450px; }
+        .modal-medium { max-width: 800px; }
+        .modal-subtab { background: #eef2f7; border: none; padding: 8px 20px; border-radius: 40px; margin-right: 8px; cursor: pointer; transition: 0.2s; }
+        .modal-subtab.active { background: #1f6e6c; color: white; }
+        .subtab-content { margin-top: 20px; }
+        .client-detail { background: #e9f3f0; padding: 12px; border-radius: 20px; margin-bottom: 15px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .company-footer { text-align: center; padding: 15px; border-top: 1px solid #e0e8f0; font-size: 0.75rem; color: #6c8a9c; background: #fafcfd; }
+        .summary-cards { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
+        .stat-card { background: #f0f6fa; padding: 16px 22px; border-radius: 28px; flex: 1; min-width: 170px; cursor: pointer; transition: 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .notes-list { background: #fef7e0; padding: 12px; border-radius: 20px; max-height: 350px; overflow-y: auto; }
+        .note-item { border-bottom: 1px solid #ffe0a3; padding: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .user-table { width: 100%; }
+        .role-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; }
+        .role-sysadmin-badge { background: #8e44ad; color: white; }
+        .role-admin-badge { background: #2c8c6e; color: white; }
+        .role-foreman-badge { background: #f39c12; color: white; }
+        .danger-text { color: #e74c3c; cursor: pointer; }
+        .warning-text { color: #f39c12; cursor: pointer; }
+        .restricted-access { background: #fef3c7; border-left: 4px solid #f39c12; padding: 20px; text-align: center; border-radius: 16px; color: #92400e; }
+        .csv-buttons-group { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; background: #f0f6fa; padding: 20px; border-radius: 28px; align-items: center; }
+        .site-select-multiple { width: 100%; padding: 8px; border-radius: 14px; border: 1px solid #cbdbe2; min-height: 80px; }
+        .edit-foreman-btn { background: #2c8c6e; color: white; border: none; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; cursor: pointer; margin-left: 8px; }
+        .settings-form-group { margin-bottom: 15px; }
+        .balance-warning { color: #e74c3c; font-weight: bold; }
+        .balance-positive { color: #27ae60; font-weight: bold; }
+        .invoice-btn-modal { background: #27ae60; margin-top: 10px; width: 100%; }
+        .delete-site-card { background: #fff5f5; border-left-color: #e74c3c; margin-bottom: 16px; }
+        .delete-site-btn { background: #c0392b; margin-top: 8px; width: 100%; }
+        .worker-type-select { margin-top: 10px; padding: 8px; background: #f0f6fa; border-radius: 12px; }
+        .csv-import-btn, .json-import-btn { background: #2c8c6e !important; }
+        .job-card, .suggestion-card { background: #f9f9f9; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #2c8c6e; }
+        .public-job-card { background: #f9f9f9; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #3498db; }
+        .password-prompt-modal { max-width: 400px; }
+        .edit-admin-section { background: #f0f6fa; padding: 15px; border-radius: 16px; margin-bottom: 20px; }
+        .wallpaper-preview { width: 100%; height: 100px; background-size: cover; background-position: center; border-radius: 8px; margin-top: 5px; border: 1px solid #ccc; }
+        .pending-request-item { background: #fff8e1; border-left: 4px solid #f39c12; padding: 10px; margin: 10px 0; border-radius: 8px; }
+        .approve-btn { background: #27ae60; font-size: 0.7rem; padding: 4px 10px; margin: 0 2px; border: none; color: white; border-radius: 20px; cursor: pointer; }
+        .reject-btn { background: #e74c3c; font-size: 0.7rem; padding: 4px 10px; margin: 0 2px; border: none; color: white; border-radius: 20px; cursor: pointer; }
+        @media (max-width: 700px) { .panel { padding: 16px; } .card-buttons { flex-direction: column; } .company-text h1 { font-size: 1rem; } }
+    </style>
+</head>
+<body>
+<div id="mainApp" style="display:none;">
+<div class="app-container">
+    <div class="app-header">
+        <div class="logo-area">
+            <div id="logoContainer">
+                <img id="companyLogoImg" class="company-logo" style="display:none;" alt="Company Logo">
+                <div id="companyLogoPlaceholder" class="company-logo-placeholder"><i class="fas fa-building"></i></div>
+            </div>
+            <div class="company-text">
+                <h1 id="companyNameDisplay"><span id="companyNameSpan">Your Company</span></h1>
+                <p id="companyDetailsDisplay">Construction & Electrical · KES Currency</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="role-indicator" id="roleIndicator"></span>
+            <button class="user-mgmt-btn" onclick="openUserManagement()"><i class="fas fa-users"></i> Users</button>
+            <button class="company-settings" onclick="openCompanySettings()"><i class="fas fa-building"></i> Settings</button>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <span class="security-badge"><i class="fas fa-lock"></i> Secure</span>
+        </div>
+    </div>
+    <div class="main-tabs">
+        <button class="main-tab-btn active" onclick="switchPanel('activePanel')"><i class="fas fa-play-circle"></i> Active Sites</button>
+        <button class="main-tab-btn" onclick="switchPanel('completedPanel')"><i class="fas fa-check-circle"></i> Completed Sites</button>
+        <button class="main-tab-btn" onclick="switchPanel('globalPanel')"><i class="fas fa-chart-line"></i> Overview</button>
+        <button class="main-tab-btn" id="deleteSiteTabBtn" onclick="promptDeleteSitePassword()" style="display:none;"><i class="fas fa-trash-alt"></i> Delete Sites</button>
+        <button class="main-tab-btn" id="jobBoardTabBtn" onclick="switchPanel('jobBoardPanel')"><i class="fas fa-briefcase"></i> Job Board</button>
+        <button class="main-tab-btn" id="suggestionsTabBtn" onclick="switchPanel('suggestionsPanel')"><i class="fas fa-comment"></i> Suggestions</button>
+        <div class="dropdown" id="otherActionsDropdown" style="display:none;">
+            <button class="dropdown-btn"><i class="fas fa-ellipsis-h"></i> Other Actions</button>
+            <div class="dropdown-content">
+                <button onclick="switchPanel('dataPanel')"><i class="fas fa-file-export"></i> Import/Export Data</button>
+                <button onclick="switchPanel('recommendationPanel')"><i class="fas fa-file-alt"></i> Recommendation Letter</button>
+                <hr style="margin: 8px 0;">
+                <button onclick="window.location.href='/training/workshop'"><i class="fas fa-chalkboard-user"></i> Workshop Training</button>
+                <button onclick="window.location.href='/training/security'"><i class="fas fa-shield-alt"></i> Security Training</button>
+                <button onclick="window.location.href='/training/safety'"><i class="fas fa-hard-hat"></i> Safety Training</button>
+            </div>
+        </div>
+    </div>
+    <div id="activePanel" class="panel active-panel"><div class="flex-between"><h2><i class="fas fa-play-circle"></i> Active Sites</h2><button id="newProjectBtn" onclick="addNewProject()"><i class="fas fa-plus"></i> New Project</button></div><div id="activeProjectsContainer" class="projects-grid"></div></div>
+    <div id="completedPanel" class="panel"><div class="flex-between"><h2><i class="fas fa-check-circle"></i> Completed / Terminated Sites</h2><button id="restoreAllArchivedBtn" onclick="restoreAllArchived()" style="background:#e67e22"><i class="fas fa-archive"></i> Restore All</button></div><div id="completedProjectsContainer" class="projects-grid"></div></div>
+    <div id="globalPanel" class="panel"><h2><i class="fas fa-chart-line"></i> Financial Overview</h2><div id="overviewContent"></div></div>
+    <div id="deleteSitePanel" class="panel"><h2><i class="fas fa-trash-alt"></i> Permanently Delete Sites (System Admin Only)</h2><div style="background:#fef2e8; border-left:5px solid #e74c3c; padding:12px; margin:15px 0; border-radius:16px;"><i class="fas fa-exclamation-triangle" style="color:#e74c3c"></i> <strong>Warning:</strong> This action is irreversible.</div><div id="deleteSitesListContainer" class="projects-grid"></div></div>
+    <div id="dataPanel" class="panel"><h2><i class="fas fa-database"></i> Data Migration & CSV Tools</h2><div class="csv-buttons-group"><button class="csv-export" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Export Projects to CSV</button><button class="csv-import csv-import-btn" onclick="document.getElementById('csvImportFile').click()"><i class="fas fa-upload"></i> Import Projects from CSV</button><input type="file" id="csvImportFile" accept=".csv" style="display:none"><button onclick="exportData()" style="background:#1f6e6c"><i class="fas fa-file-code"></i> Export JSON (Full Backup)</button><button class="json-import-btn" onclick="document.getElementById('importFileInput').click()" style="background:#2c8c6e"><i class="fas fa-upload"></i> Import JSON</button><input type="file" id="importFileInput" accept=".json" style="display:none"></div><div style="background:#eef3fa; padding:15px; border-radius:24px; margin-top:10px;"><i class="fas fa-info-circle"></i> <strong>CSV Format:</strong> Exports projects with expenses, incomes, materials, workers and notes flattened.</div></div>
+    <div id="recommendationPanel" class="panel"><h2><i class="fas fa-file-alt"></i> Generate Recommendation Letter (Admin Only)</h2><div style="background:#e8f5e9; padding:20px; border-radius:20px; margin-top:15px;"><div class="form-group"><label>Select Person Type</label><select id="recPersonType" onchange="toggleRecPersonFields()"><option value="worker">Worker/Employee</option><option value="intern">Intern/Attachee</option></select></div><div id="recWorkerDiv" class="form-group"><label>Select Worker/Employee</label><select id="recWorkerSelect" style="width:100%; padding:10px;"></select></div><div id="recInternDiv" class="form-group" style="display:none;"><label>Intern/Attachee Full Name</label><input type="text" id="recInternName" placeholder="Enter intern's full name"></div><div class="form-group"><label>Join Date (Start Date)</label><input type="date" id="recJoinDate"></div><div class="form-group"><label>Leave Date (End Date)</label><input type="date" id="recLeaveDate"></div><div class="form-group"><label>Job Title</label><input type="text" id="recJobTitle" placeholder="e.g., Electrician, Technician, etc."></div><div class="form-group"><label>Work Type / Specialization</label><input type="text" id="recWorkType" placeholder="e.g., piping, mounting, cabling, etc."></div><div class="form-group"><label>Recommendation Summary / Performance Notes</label><textarea id="recSummary" rows="3" placeholder="Enter recommendation summary or click 'Auto-fill from Worker Record'"></textarea><button id="autoFillRecBtn" style="margin-top:5px; background:#3498db"><i class="fas fa-magic"></i> Auto-fill from Worker Record</button></div><div class="form-group"><label>Select Site (where they worked)</label><select id="recSiteSelect" style="width:100%; padding:10px;"></select></div><button id="generateRecBtn" style="background:#8e44ad; width:100%; margin-top:15px;"><i class="fas fa-file-pdf"></i> Generate Recommendation Letter PDF</button></div></div>
+    <div id="jobBoardPanel" class="panel"><h2><i class="fas fa-briefcase"></i> Job Board</h2><div id="jobBoardContainer"></div><div id="adminJobControls" style="display:none; margin-top:20px;"><hr><h3>Post New Job (Admin only)</h3><div class="form-row"><div class="form-group"><input type="text" id="jobTitle" placeholder="Job Title"></div><div class="form-group"><input type="text" id="jobLocation" placeholder="Location"></div></div><div class="form-row"><div class="form-group"><textarea id="jobDescription" rows="3" placeholder="Job Description"></textarea></div></div><div class="form-row"><div class="form-group"><input type="text" id="jobContact" placeholder="Contact info (email/phone)"></div></div><button onclick="postJob()"><i class="fas fa-plus"></i> Post Job</button></div></div>
+    <div id="suggestionsPanel" class="panel"><h2><i class="fas fa-comment"></i> Suggestions / Feedback</h2><div id="suggestionsContainer"></div><hr><h3>Submit a Suggestion</h3><div class="form-row"><div class="form-group"><input type="text" id="suggestionName" placeholder="Your Name (optional)"></div></div><div class="form-row"><div class="form-group"><textarea id="suggestionText" rows="3" placeholder="Your suggestion..."></textarea></div></div><button onclick="submitSuggestion()"><i class="fas fa-paper-plane"></i> Submit Suggestion</button></div></div>
+    <div class="company-footer" id="companyFooter"><span id="footerText">Company Name | Address | P.O. Box | Tel: | Email:</span></div>
+</div></div>
+
+<!-- Password Prompt Modal -->
+<div id="passwordPromptModal" class="modal" style="z-index: 30000;">
+    <div class="modal-content password-prompt-modal">
+        <div class="flex-between"><h2><i class="fas fa-lock"></i> Verify Admin Password</h2><button onclick="closePasswordPrompt()" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div>
+        <div style="margin-top:20px;"><p>For security, please enter your password to access the Delete Sites section.</p></div>
+        <div class="form-group" style="margin-top:15px;"><label>Your Password</label><div class="password-wrapper"><input type="password" id="deleteSitePassword" placeholder="Enter your login password"><button type="button" class="toggle-password" onclick="togglePassword('deleteSitePassword')"><i class="fas fa-eye"></i></button></div></div>
+        <div id="passwordError" style="color:#e74c3c; font-size:0.8rem; display:none; margin-top:10px;"></div>
+        <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;"><button onclick="closePasswordPrompt()" style="background:#6c8a9c">Cancel</button><button onclick="verifyDeleteSitePassword()" style="background:#e74c3c"><i class="fas fa-trash-alt"></i> Verify & Proceed</button></div>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal" style="display:flex; align-items:center; justify-content:center; z-index: 20000;">
+    <div class="modal-content" style="max-width: 900px;">
+        <div style="text-align:center"><h2><i class="fas fa-lock"></i> Company ERP Login</h2><div style="margin:20px 0;"><button onclick="showLoginTab('login')" id="loginTabBtn" style="background:#1f6e6c; margin-right:10px">Login</button><button onclick="showLoginTab('signup')" id="signupTabBtn" style="background:#6c8a9c">Sign Up</button><button onclick="showLoginTab('forgot')" id="forgotTabBtn" style="background:#e67e22; margin-left:10px">Forgot Password</button><button onclick="showLoginTab('jobs')" id="jobsTabBtn" style="background:#2c8c6e; margin-left:10px"><i class="fas fa-briefcase"></i> Jobs</button></div>
+            <div id="loginPanel"><div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="Enter username"></div><div class="form-group"><label>Password</label><div class="password-wrapper"><input type="password" id="loginPassword" placeholder="Enter password"><button type="button" class="toggle-password" onclick="togglePassword('loginPassword')"><i class="fas fa-eye"></i></button></div></div><div id="loginError" style="color:#e74c3c; font-size:0.8rem; display:none"></div><button onclick="attemptLogin()" style="width:100%"><i class="fas fa-sign-in-alt"></i> Login</button></div>
+            <div id="signupPanel" style="display:none"><div class="form-group"><label>Full Name</label><input type="text" id="signupName"></div><div class="form-group"><label>Username</label><input type="text" id="signupUsername"></div><div class="form-group"><label>Password</label><div class="password-wrapper"><input type="password" id="signupPassword"><button type="button" class="toggle-password" onclick="togglePassword('signupPassword')"><i class="fas fa-eye"></i></button></div></div><div class="form-group"><label>Confirm Password</label><div class="password-wrapper"><input type="password" id="signupConfirmPassword"><button type="button" class="toggle-password" onclick="togglePassword('signupConfirmPassword')"><i class="fas fa-eye"></i></button></div></div><div class="form-group"><label>Security Key (for password recovery)</label><input type="text" id="signupSecurityKey" placeholder="Enter a secret key you will remember"><small style="color:#666; display:block;">This key will be required to reset your password</small></div><div class="form-group"><label>Role</label><select id="signupRole"><option value="foreman">Site Foreman (Immediate)</option><option value="admin_request">Administrator (Requires System Admin Approval)</option></select></div><div class="form-group" id="assignedSitesGroup"><label>Assigned Sites (Foreman)</label><select id="signupAssignedSites" class="site-select-multiple" multiple></select></div><div id="signupError" style="color:#e74c3c; font-size:0.8rem; display:none"></div><button onclick="attemptSignup()" style="width:100%"><i class="fas fa-user-plus"></i> Register</button><p style="font-size:0.7rem; margin-top:10px; color:#e67e22;">Admin requests expire in 5 minutes if not approved by System Admin.</p></div>
+            <div id="forgotPanel" style="display:none"><div class="form-group"><label>Username</label><input type="text" id="forgotUsername" placeholder="Enter your username"></div><div class="form-group"><label>Security Key</label><input type="text" id="forgotSecurityKey" placeholder="Enter your security key"></div><div class="form-group"><label>New Password</label><div class="password-wrapper"><input type="password" id="forgotNewPassword"><button type="button" class="toggle-password" onclick="togglePassword('forgotNewPassword')"><i class="fas fa-eye"></i></button></div></div><div class="form-group"><label>Confirm New Password</label><div class="password-wrapper"><input type="password" id="forgotConfirmPassword"><button type="button" class="toggle-password" onclick="togglePassword('forgotConfirmPassword')"><i class="fas fa-eye"></i></button></div></div><div id="forgotError" style="color:#e74c3c; font-size:0.8rem; display:none"></div><div id="forgotSuccess" style="color:#27ae60; font-size:0.8rem; display:none"></div><button onclick="resetForgottenPassword()" style="width:100%"><i class="fas fa-key"></i> Reset Password</button></div>
+            <div id="jobsPanel" style="display:none"><h3><i class="fas fa-briefcase"></i> Current Job Openings</h3><div id="publicJobBoardList" style="max-height: 400px; overflow-y: auto; margin-top: 15px;"></div><button onclick="showLoginTab('login')" style="margin-top:15px; width:100%; background:#1f6e6c"><i class="fas fa-arrow-left"></i> Back to Login</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Worker Detail Modal -->
+<div id="workerDetailModal" class="modal"><div class="modal-content modal-medium"><div class="flex-between"><h2><i class="fas fa-user"></i> Worker Details</h2><button onclick="closeModalById('workerDetailModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div><div id="workerDetailContent"></div><div style="margin-top:20px;"><button onclick="printWorkerDetail()" style="background:#2c7a4d"><i class="fas fa-print"></i> Print Worker Details</button></div></div></div>
+
+<!-- Edit Worker Modal -->
+<div id="editWorkerModal" class="modal"><div class="modal-content modal-small"><div class="flex-between"><h2><i class="fas fa-edit"></i> Edit Worker</h2><button onclick="closeModalById('editWorkerModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div><div id="editWorkerForm"></div><div style="margin-top:20px;"><button onclick="saveEditedWorker()" style="background:#27ae60"><i class="fas fa-save"></i> Save Changes</button></div></div></div>
+
+<!-- Company Settings Modal -->
+<div id="companySettingsModal" class="modal"><div class="modal-content modal-large"><div class="flex-between"><h2><i class="fas fa-building"></i> Company Settings</h2><button onclick="closeModalById('companySettingsModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div><div id="companySettingsForm"><div class="settings-form-group"><label>Company Logo</label><div style="display:flex; align-items:center; gap:15px; margin-bottom:10px;"><div id="settingsLogoContainer"><img id="settingsLogoImg" style="height:60px; width:auto; display:none;"><div id="settingsLogoPlaceholder" style="width:60px; height:60px; background:#eef2f7; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px dashed #ccc;"><i class="fas fa-image" style="font-size:24px; color:#999;"></i></div></div><div><input type="file" id="settingsLogoUpload" accept="image/*"><button type="button" onclick="uploadSettingsLogo()" style="margin-top:5px; background:#2c8c6e"><i class="fas fa-upload"></i> Upload Logo</button><button type="button" onclick="removeSettingsLogo()" style="margin-top:5px; background:#c0392b; margin-left:5px;"><i class="fas fa-trash"></i> Remove</button></div></div></div><div class="settings-form-group"><label>Login Wallpaper</label><div><input type="file" id="settingsWallpaperUpload" accept="image/*"><button type="button" onclick="uploadSettingsWallpaper()" style="margin-top:5px; background:#2c8c6e"><i class="fas fa-upload"></i> Upload Wallpaper</button><button type="button" onclick="removeSettingsWallpaper()" style="margin-top:5px; background:#c0392b; margin-left:5px;"><i class="fas fa-trash"></i> Remove</button></div><div id="wallpaperPreview" class="wallpaper-preview" style="display:none;"></div></div><div class="settings-form-group"><label>Company Name</label><input type="text" id="settingsCompanyName"></div><div class="settings-form-group"><label>Tagline</label><input type="text" id="settingsTagline"></div><div class="settings-form-group"><label>P.O. Box</label><input type="text" id="settingsPOBox"></div><div class="settings-form-group"><label>Address</label><input type="text" id="settingsAddress"></div><div class="settings-form-group"><label>Email</label><input type="email" id="settingsEmail"></div><div class="settings-form-group"><label>Phone</label><input type="text" id="settingsPhone"></div><div class="settings-form-group"><label>PIN/Tax Number</label><input type="text" id="settingsPin"></div><div class="settings-form-group"><label>Bank Name</label><input type="text" id="settingsBankName"></div><div class="settings-form-group"><label>Bank Account</label><input type="text" id="settingsBankAccount"></div></div><div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;"><button onclick="closeModalById('companySettingsModal')" style="background:#6c8a9c">Cancel</button><button onclick="saveCompanySettings()" style="background:#2c8c6e"><i class="fas fa-save"></i> Save Settings</button></div></div></div>
+
+<!-- Invoice Modal -->
+<div id="invoiceModal" class="modal"><div class="modal-content modal-small"><div class="flex-between"><h2><i class="fas fa-file-invoice-dollar"></i> Generate Invoice</h2><button onclick="closeModalById('invoiceModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div><div id="invoiceContent"><div class="form-group"><label>Client Name</label><input type="text" id="invoiceClientName" readonly style="background:#f0f0f0"></div><div class="form-group"><label>Project Name</label><input type="text" id="invoiceProjectName" readonly style="background:#f0f0f0"></div><div class="form-group"><label>Total Contract Amount (KES)</label><input type="text" id="invoiceTotalAmount" readonly style="background:#f0f0f0"></div><div class="form-group"><label>Total Amount Paid (KES)</label><input type="number" id="invoiceTotalPaid" placeholder="Enter total amount paid so far"></div><div class="form-group"><label>Invoice Amount (KES)</label><input type="number" id="invoiceAmount" placeholder="Enter amount to invoice"></div><div class="form-group"><label>Tax Rate (%)</label><input type="number" id="invoiceTaxRate" value="16" placeholder="Tax percentage" step="0.5"></div><div class="form-group"><label>Tax Amount (KES)</label><input type="text" id="invoiceTaxAmount" readonly style="background:#f0f0f0"></div><div class="form-group"><label>Amount After Tax (KES)</label><input type="text" id="invoiceAfterTax" readonly style="background:#f0f0f0"></div><div class="form-group"><label>Remaining Balance After Invoice (KES)</label><input type="text" id="invoiceRemainingBalance" readonly style="background:#f0f0f0"></div><div class="form-group"><label>Invoice Description</label><textarea id="invoiceDescription" rows="2" placeholder="Progress Payment from Client..."></textarea></div><div class="form-group"><label>Due Date</label><input type="date" id="invoiceDueDate"></div></div><div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;"><button onclick="closeModalById('invoiceModal')" style="background:#6c8a9c">Cancel</button><button onclick="generateInvoicePDF()" style="background:#27ae60"><i class="fas fa-file-pdf"></i> Generate Invoice PDF</button></div></div></div>
+
+<div id="editForemanSitesModal" class="modal"><div class="modal-content modal-large"><div class="flex-between"><h2><i class="fas fa-hard-hat"></i> Edit Foreman's Assigned Sites</h2><button onclick="closeModalById('editForemanSitesModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div><div id="editForemanContent"></div><div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;"><button onclick="closeModalById('editForemanSitesModal')" style="background:#6c8a9c">Cancel</button><button onclick="saveForemanSites()" style="background:#2c8c6e"><i class="fas fa-save"></i> Save Changes</button></div></div></div>
+
+<div id="financialModal" class="modal"><div class="modal-content modal-medium"><div class="flex-between"><h2><i class="fas fa-chart-line"></i> Financial Details</h2><button onclick="closeModalById('financialModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div><div id="financialDetailsContent"></div></div></div>
+
+<div id="userMgmtModal" class="modal"><div class="modal-content modal-small"><div class="flex-between"><h2><i class="fas fa-users"></i> User Management</h2><button onclick="closeModalById('userMgmtModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div>
+<div id="sysAdminSection" style="display:none;" class="edit-admin-section"><h4><i class="fas fa-crown"></i> System Admin Account Settings</h4><div class="form-group"><label>Admin Username</label><input type="text" id="adminUsername" placeholder="Admin username"></div><div class="form-group"><label>New Password (leave blank to keep current)</label><div class="password-wrapper"><input type="password" id="adminNewPassword"><button type="button" class="toggle-password" onclick="togglePassword('adminNewPassword')"><i class="fas fa-eye"></i></button></div></div><div class="form-group"><label>Confirm New Password</label><div class="password-wrapper"><input type="password" id="adminConfirmPassword"><button type="button" class="toggle-password" onclick="togglePassword('adminConfirmPassword')"><i class="fas fa-eye"></i></button></div></div><button onclick="updateAdminCredentials()" style="width:100%; background:#8e44ad"><i class="fas fa-save"></i> Update System Admin Credentials</button><div id="adminUpdateMsg" style="font-size:0.75rem; margin-top:8px; display:none;"></div></div>
+<hr><div id="pendingRequestsContainer" style="display:none;"><h4>Pending Admin Approval Requests (Expire in 5 min)</h4><div id="pendingRequestsList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div><hr></div>
+<div id="userListContainer" style="max-height:300px; overflow-y:auto"></div>
+<hr><h4>Change Your Password</h4><div class="form-group"><label>Current Password</label><div class="password-wrapper"><input type="password" id="changeCurrentPwd"><button type="button" class="toggle-password" onclick="togglePassword('changeCurrentPwd')"><i class="fas fa-eye"></i></button></div></div><div class="form-group"><label>New Password</label><div class="password-wrapper"><input type="password" id="changeNewPwd"><button type="button" class="toggle-password" onclick="togglePassword('changeNewPwd')"><i class="fas fa-eye"></i></button></div></div><div class="form-group"><label>Confirm New Password</label><div class="password-wrapper"><input type="password" id="changeConfirmPwd"><button type="button" class="toggle-password" onclick="togglePassword('changeConfirmPwd')"><i class="fas fa-eye"></i></button></div></div><button onclick="changePassword()" style="width:100%; margin-top:10px"><i class="fas fa-key"></i> Change My Password</button><div id="pwdChangeMsg" style="color:#2c8c6e; font-size:0.8rem; margin-top:10px; display:none"></div></div></div>
+
+<!-- Project Modal -->
+<div id="projectModal" class="modal"><div class="modal-content"><div class="flex-between"><h2 id="modalTitle">Project Site</h2><button onclick="closeModalById('projectModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div><div id="modalProjectInfo" class="client-detail"></div><div style="display:flex; gap:6px; border-bottom:1px solid #ccc; margin:12px 0; flex-wrap:wrap"><button class="modal-subtab active" data-tab="expensesIncome"><i class="fas fa-coins"></i> Expenses/Income</button><button class="modal-subtab" data-tab="materials"><i class="fas fa-boxes"></i> Materials</button><button class="modal-subtab" data-tab="workers"><i class="fas fa-users"></i> Workers</button><button class="modal-subtab" data-tab="siteNotes"><i class="fas fa-sticky-note"></i> Site Notes</button><button class="modal-subtab" data-tab="generateInvoice" id="invoiceTabBtn"><i class="fas fa-file-invoice"></i> Generate Invoice</button><button class="modal-subtab" data-tab="invoiceHistory" id="invoiceHistoryTabBtn"><i class="fas fa-history"></i> Invoice History</button></div>
+<div id="subtabExpensesIncome" class="subtab-content"><div class="form-row"><div class="form-group"><input type="text" id="expDesc" placeholder="Expense description"></div><div class="form-group"><input type="number" id="expAmount" placeholder="Amount (KES)"></div><button onclick="addExpenseManual()"><i class="fas fa-plus"></i> Add Expense (Manual)</button></div><div class="form-row"><div class="form-group"><input type="text" id="incDesc" placeholder="Income/Payment description"></div><div class="form-group"><input type="number" id="incAmount" placeholder="Amount Received (KES)"></div><button onclick="addIncomeManual()"><i class="fas fa-plus-circle"></i> Record Payment (Manual)</button></div><div><strong>Expenses List</strong><ul id="expenseList" style="margin-left:20px"></ul></div><div><strong>Income/Payments Received</strong><ul id="incomeList" style="margin-left:20px"></ul></div><div class="stat-card">Site Totals: <span id="siteTotalsSpan"></span></div></div>
+<div id="subtabMaterials" class="subtab-content" style="display:none"><div class="form-row"><input type="text" id="matDesc" placeholder="Item description"><input type="number" id="matQty" placeholder="Quantity"><input type="text" id="matArea" placeholder="Area of use"><input type="number" id="matCost" placeholder="Cost (KES)"><button onclick="addMaterial()">Add Row</button></div><table id="materialsTable"><thead><tr><th>Description</th><th>Quantity</th><th>Area of Use</th><th>Cost (KES)</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+<div id="subtabWorkers" class="subtab-content" style="display:none">
+    <div class="form-row">
+        <div class="form-group"><input type="text" id="workerName" placeholder="Worker Name"></div>
+        <div class="form-group"><input type="text" id="workerIdNumber" placeholder="ID Number"></div>
+        <div class="form-group"><input type="text" id="workerPhone" placeholder="Telephone Number"></div>
+        <div class="form-group"><input type="date" id="workerDate"></div>
+        <div class="form-group"><input type="text" id="workerJobTitle" placeholder="Job Title"></div>
+        <div class="form-group"><input type="text" id="workType" placeholder="Work Type"></div>
+        <div class="form-group"><input type="number" id="daysWorked" placeholder="Days"></div>
+    </div>
+    <div class="form-row" id="financialFieldsRow" style="display:none;">
+        <div class="form-group"><input type="number" id="wagePerDay" placeholder="Wage/Day (KES)"></div>
+        <div class="form-group"><input type="number" id="payePercent" placeholder="PAYE (%)" value="0" step="0.5"></div>
+        <div class="form-group"><input type="number" id="nssfAmount" placeholder="NSSF (KES)" value="0"></div>
+        <div class="form-group"><input type="number" id="nhifAmount" placeholder="NHIF (KES)" value="0"></div>
+        <div class="form-group"><input type="number" id="advanceGiven" placeholder="Advance (KES)" value="0"></div>
+    </div>
+    <div class="worker-type-select"><label><input type="radio" name="workerType" value="regular" checked> Regular Worker</label>&nbsp;&nbsp;<label><input type="radio" name="workerType" value="intern"> Intern/Attachee</label></div>
+    <button onclick="addWorker()">Add Worker</button>
+    <table id="workersTable"><thead><tr><th>Name</th><th>ID No.</th><th>Phone</th><th>Date</th><th>Job Title</th><th>Work Type</th><th>Days</th><th>Wage/Day</th><th>Total Wages</th><th>PAYE</th><th>NSSF</th><th>NHIF</th><th>Advance</th><th>Balance</th><th>Type</th><th>Actions</th></tr></thead><tbody></tbody></table>
+</div>
+<div id="subtabSiteNotes" class="subtab-content" style="display:none"><h3><i class="fas fa-pencil-alt"></i> Notes for this Site</h3><div class="form-row"><div class="form-group" style="flex:3"><textarea id="siteNoteContent" rows="2" placeholder="Add a note..."></textarea></div><button onclick="addSiteNote()"><i class="fas fa-save"></i> Save Note</button></div><div id="siteNotesListContainer" class="notes-list"></div></div>
+<div id="subtabGenerateInvoice" class="subtab-content" style="display:none"><h3><i class="fas fa-file-invoice-dollar"></i> Generate Invoice for this Site</h3><button id="invoiceButtonInModal" class="invoice-btn-modal" onclick="openInvoiceModalFromModal()" style="background:#27ae60; width:100%; margin-top:10px;"><i class="fas fa-file-pdf"></i> Click to Generate Invoice</button></div>
+<div id="subtabInvoiceHistory" class="subtab-content" style="display:none"><h3><i class="fas fa-history"></i> Invoice History</h3><div id="invoiceHistoryContainer" style="max-height:300px; overflow-y:auto;"></div></div>
+</div></div>
+
+<script>
+// ==================== GLOBALS ====================
+let currentUser = null;
+let projects = [];
+let currentProjectId = null;
+let invoiceProjectId = null;
+let deleteSiteAccessGranted = false;
+let companyLogoData = null;
+let wallpaperData = null;
+let currentEditWorkerIndex = null;
+let currentEditProjectId = null;
+let pendingAdminRequests = [];
+
+// ==================== UTILITIES ====================
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function formatKES(amount) {
+    if (amount === undefined || amount === null) return "KES 0";
+    return "KES " + amount.toLocaleString('en-KE');
+}
+
+function showToast(msg) { alert(msg); }
+
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const btn = input.parentElement.querySelector('.toggle-password');
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    } else {
+        input.type = 'password';
+        btn.innerHTML = '<i class="fas fa-eye"></i>';
+    }
+}
+
+// ==================== LOGIN / SESSION ====================
+async function attemptLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+    errorDiv.style.display = 'none';
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            currentUser = data.user;
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            const roleIcon = currentUser.role === 'system_admin' ? 'fa-crown' : (currentUser.role === 'admin' ? 'fa-user-shield' : 'fa-hard-hat');
+            document.getElementById('roleIndicator').innerHTML = `<i class="fas ${roleIcon}"></i> ${currentUser.role.toUpperCase()}${currentUser.role !== 'foreman' ? ` (${currentUser.username})` : ''}`;
+            const isSysAdmin = currentUser.role === 'system_admin';
+            const isAdmin = currentUser.role === 'system_admin' || currentUser.role === 'admin';
+            document.getElementById('deleteSiteTabBtn').style.display = isSysAdmin ? 'inline-flex' : 'none';
+            document.getElementById('otherActionsDropdown').style.display = isAdmin ? 'inline-block' : 'none';
+            document.getElementById('adminJobControls').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('financialFieldsRow').style.display = isAdmin ? 'flex' : 'none';
+            document.getElementById('newProjectBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            document.getElementById('restoreAllArchivedBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            await loadProjects();
+            await loadCompanySettings();
+            await loadJobs();
+            await loadSuggestions();
+            renderJobBoard();
+            renderSuggestions();
+            renderPublicJobBoard();
+            switchPanel('activePanel');
+        } else {
+            errorDiv.innerText = data.error || 'Login failed';
+            errorDiv.style.display = 'block';
+        }
+    } catch (err) {
+        errorDiv.innerText = 'Network error. Is the server running?';
+        errorDiv.style.display = 'block';
+    }
+}
+
+async function logout() {
+    await fetch('/api/logout', { method: 'POST' });
+    currentUser = null;
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginModal').style.display = 'flex';
+    showLoginTab('login');
+}
+
+async function checkSession() {
+    const response = await fetch('/api/current_user');
+    const data = await response.json();
+    if (data.authenticated) {
+        currentUser = data.user;
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        const roleIcon = currentUser.role === 'system_admin' ? 'fa-crown' : (currentUser.role === 'admin' ? 'fa-user-shield' : 'fa-hard-hat');
+        document.getElementById('roleIndicator').innerHTML = `<i class="fas ${roleIcon}"></i> ${currentUser.role.toUpperCase()}${currentUser.role !== 'foreman' ? ` (${currentUser.username})` : ''}`;
+        const isSysAdmin = currentUser.role === 'system_admin';
+        const isAdmin = currentUser.role === 'system_admin' || currentUser.role === 'admin';
+        document.getElementById('deleteSiteTabBtn').style.display = isSysAdmin ? 'inline-flex' : 'none';
+        document.getElementById('otherActionsDropdown').style.display = isAdmin ? 'inline-block' : 'none';
+        document.getElementById('adminJobControls').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('financialFieldsRow').style.display = isAdmin ? 'flex' : 'none';
+        document.getElementById('newProjectBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+        document.getElementById('restoreAllArchivedBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+        await loadProjects();
+        await loadCompanySettings();
+        await loadJobs();
+        await loadSuggestions();
+        renderJobBoard();
+        renderSuggestions();
+        renderPublicJobBoard();
+        switchPanel('activePanel');
+    }
+}
+
+// ==================== PROJECTS ====================
+async function loadProjects() {
+    const response = await fetch('/api/projects');
+    const data = await response.json();
+    projects = data.projects;
+    renderActiveProjects();
+    renderCompletedProjects();
+    renderOverview();
+    updateSiteDropdowns();
+}
+
+function renderActiveProjects() {
+    const container = document.getElementById('activeProjectsContainer');
+    const active = projects.filter(p => p.status === 'active');
+    if (active.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:40px;">No active projects.</p>';
+        return;
+    }
+    container.innerHTML = active.map(proj => `
+        <div class="project-card">
+            <div class="project-name">${escapeHtml(proj.name)}</div>
+            <div class="project-meta">📍 ${escapeHtml(proj.location || '')}<br>👤 ${escapeHtml(proj.clientName || '')}</div>
+            <div>💰 Agreed: ${formatKES(proj.agreedCost)}</div>
+            <span class="status-badge status-active"><i class="fas fa-play"></i> Active</span>
+            <div class="card-buttons">
+                <button class="open-btn" onclick="openProjectModal('${proj.id}')"><i class="fas fa-eye"></i> OPEN SITE</button>
+                ${(currentUser.role === 'system_admin' || currentUser.role === 'admin') ? `
+                <div class="action-buttons-group">
+                    <button class="action-small complete-btn" onclick="markAsCompleted('${proj.id}')"><i class="fas fa-check-circle"></i> Complete</button>
+                    <button class="action-small terminate-btn" onclick="terminateProject('${proj.id}')"><i class="fas fa-ban"></i> Terminate</button>
+                </div>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderCompletedProjects() {
+    const container = document.getElementById('completedProjectsContainer');
+    const archived = projects.filter(p => p.status !== 'active');
+    if (archived.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:40px;">No completed/terminated projects.</p>';
+        return;
+    }
+    container.innerHTML = archived.map(proj => `
+        <div class="project-card ${proj.status === 'terminated' ? 'terminated-card' : 'completed-card'}">
+            <div class="project-name">${escapeHtml(proj.name)}</div>
+            <div class="project-meta">📍 ${escapeHtml(proj.location || '')}<br>👤 ${escapeHtml(proj.clientName || '')}</div>
+            <div>💰 Agreed: ${formatKES(proj.agreedCost)}</div>
+            <span class="status-badge ${proj.status === 'completed' ? 'status-completed' : 'status-terminated'}">${proj.status === 'completed' ? 'Completed' : 'Terminated'}</span>
+            <div class="archived-buttons">
+                <button class="view-btn" onclick="openProjectModal('${proj.id}')"><i class="fas fa-eye"></i> View Details</button>
+                ${(currentUser.role === 'system_admin' || currentUser.role === 'admin') ? `<button class="restore-archived-btn" onclick="restoreToActive('${proj.id}')"><i class="fas fa-undo"></i> Restore</button>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderOverview() {
+    const container = document.getElementById('overviewContent');
+    if (!container) return;
+    if (currentUser.role === 'system_admin' || currentUser.role === 'admin') {
+        let totalNetIncome = 0, totalExpenses = 0, totalTax = 0;
+        projects.forEach(p => {
+            const invHistory = p.invoiceHistory || [];
+            invHistory.forEach(inv => {
+                totalNetIncome += (inv.afterTax || inv.amount);
+                totalTax += (inv.taxAmount || 0);
+            });
+            totalExpenses += (p.expenses || []).reduce((s, e) => s + (e.amt || 0), 0);
+        });
+        const netProfit = totalNetIncome - totalExpenses;
+        container.innerHTML = `
+            <div class="summary-cards">
+                <div class="stat-card"><i class="fas fa-globe"></i> Total Net Income<br><strong>${formatKES(totalNetIncome)}</strong></div>
+                <div class="stat-card"><i class="fas fa-receipt"></i> Total Expenses<br><strong>${formatKES(totalExpenses)}</strong></div>
+                <div class="stat-card"><i class="fas fa-chart-line"></i> Net Profit<br><strong>${formatKES(netProfit)}</strong></div>
+                <div class="stat-card"><i class="fas fa-file-invoice-dollar"></i> Total Tax Collected<br><strong>${formatKES(totalTax)}</strong></div>
+            </div>
+            <button class="view-financial-btn" onclick="showFullFinancialReport()"><i class="fas fa-chart-bar"></i> View Complete Financial Report</button>
+            <hr><h3>All Sites Financial Summary</h3>
+            <div style="overflow-x:auto;"><table style="width:100%"><thead><tr style="background:#1f6e6c; color:white;"><th>Site Name</th><th>Status</th><th>Gross Income</th><th>Tax</th><th>Net Income</th><th>Expenses</th><th>Profit</th><th>Balance Owed</th></tr></thead><tbody>
+            ${projects.map(p => {
+                const gross = (p.invoiceHistory || []).reduce((s, i) => s + (i.amount || 0), 0);
+                const tax = (p.invoiceHistory || []).reduce((s, i) => s + (i.taxAmount || 0), 0);
+                const netInc = gross - tax;
+                const exp = (p.expenses || []).reduce((s, e) => s + (e.amt || 0), 0);
+                const profit = netInc - exp;
+                const paid = p.manualTotalPaid || 0;
+                const balance = (p.agreedCost || 0) - paid;
+                return `<tr><td>${escapeHtml(p.name)}</td><td>${p.status}</td><td>${formatKES(gross)}</td><td>${formatKES(tax)}</td><td>${formatKES(netInc)}</td><td>${formatKES(exp)}</td><td class="${profit>=0?'balance-positive':'balance-warning'}">${formatKES(profit)}</td><td class="${balance>0?'balance-warning':'balance-positive'}">${formatKES(balance)}</td></tr>`;
+            }).join('')}
+            </tbody>} }}</div>
+        `;
+    } else {
+        container.innerHTML = '<div class="restricted-access"><i class="fas fa-lock"></i><h3>Restricted Access</h3><p>Financial info only for Administrators.</p></div>';
+    }
+}
+
+async function addNewProject() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
+        alert('Only administrators can add projects');
+        return;
+    }
+    const name = prompt("Project Name:");
+    if (!name) return;
+    const location = prompt("Location:") || "";
+    const clientName = prompt("Client Name:") || "";
+    const clientPhone = prompt("Client Phone:") || "";
+    const startDate = prompt("Start Date (YYYY-MM-DD):") || "";
+    const agreedCost = parseFloat(prompt("Agreed Contract Cost (KES):") || "0");
+    const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, location, clientName, clientPhone, startDate, agreedCost })
+    });
+    const data = await response.json();
+    if (data.success) {
+        await loadProjects();
+        alert('Project created successfully');
+    } else {
+        alert('Error creating project');
+    }
+}
+
+async function markAsCompleted(projectId) {
+    const proj = projects.find(p => p.id === projectId);
+    if (proj && proj.status === 'active') {
+        proj.status = 'completed';
+        proj.completionDate = new Date().toISOString().split('T')[0];
+        proj.endDate = proj.completionDate;
+        await updateProject(proj);
+        await loadProjects();
+        alert('Marked as completed');
+    }
+}
+
+async function terminateProject(projectId) {
+    if (!confirm('Terminate this project?')) return;
+    const proj = projects.find(p => p.id === projectId);
+    if (proj && proj.status === 'active') {
+        proj.status = 'terminated';
+        proj.completionDate = new Date().toISOString().split('T')[0];
+        await updateProject(proj);
+        await loadProjects();
+        alert('Project terminated');
+    }
+}
+
+async function restoreToActive(projectId) {
+    const proj = projects.find(p => p.id === projectId);
+    if (proj) {
+        proj.status = 'active';
+        proj.completionDate = null;
+        proj.endDate = '';
+        await updateProject(proj);
+        await loadProjects();
+        alert('Restored to active');
+    }
+}
+
+async function restoreAllArchived() {
+    if (!confirm('Restore all archived projects to active?')) return;
+    for (let p of projects) {
+        if (p.status !== 'active') {
+            p.status = 'active';
+            p.completionDate = null;
+            p.endDate = '';
+            await updateProject(p);
+        }
+    }
+    await loadProjects();
+    alert('All projects restored');
+}
+
+async function updateProject(proj) {
+    const response = await fetch(`/api/projects/${proj.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(proj)
+    });
+    return response.json();
+}
+
+// ==================== PROJECT MODAL ====================
+function openProjectModal(projectId) {
+    const proj = projects.find(p => p.id === projectId);
+    if (!proj) return;
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin' && (!currentUser.assignedSiteIds || !currentUser.assignedSiteIds.includes(proj.id))) {
+        alert('Access denied');
+        return;
+    }
+    currentProjectId = projectId;
+    document.getElementById('modalTitle').innerHTML = `${escapeHtml(proj.name)} <span class="status-badge status-${proj.status}">${proj.status.toUpperCase()}</span>`;
+    const paid = proj.manualTotalPaid || 0;
+    const balance = (proj.agreedCost || 0) - paid;
+    const isAdmin = (currentUser.role === 'system_admin' || currentUser.role === 'admin');
+    document.getElementById('modalProjectInfo').innerHTML = `
+        <div>📍 ${escapeHtml(proj.location || '')} | 👤 ${escapeHtml(proj.clientName || '')} 📞 ${escapeHtml(proj.clientPhone || '')}</div>
+        <div>📅 ${proj.startDate || '—'} → ${proj.endDate || '—'}</div>
+        ${isAdmin ? `<div>💰 Agreed: ${formatKES(proj.agreedCost)} | Paid: ${formatKES(paid)} | Balance: <span class="${balance > 0 ? 'balance-warning' : 'balance-positive'}">${formatKES(balance)}</span></div>` : '<div>💰 Financial: ★★★★★★</div>'}
+    `;
+    refreshModalData(proj);
+    refreshInvoiceHistoryDisplay(proj);
+    openModalAndBringToFront('projectModal');
+    attachModalTabHandlers();
+    if (currentUser.role === 'foreman') {
+        document.querySelectorAll('.modal-subtab[data-tab="generateInvoice"], .modal-subtab[data-tab="invoiceHistory"], .modal-subtab[data-tab="expensesIncome"]').forEach(t => t.style.display = 'none');
+    } else {
+        document.querySelectorAll('.modal-subtab[data-tab="generateInvoice"], .modal-subtab[data-tab="invoiceHistory"], .modal-subtab[data-tab="expensesIncome"]').forEach(t => t.style.display = 'inline-block');
+    }
+}
+
+function refreshModalData(proj) {
+    const isAdmin = (currentUser.role === 'system_admin' || currentUser.role === 'admin');
+    const expenses = proj.expenses || [];
+    document.getElementById('expenseList').innerHTML = expenses.map((e, idx) => `<li>${escapeHtml(e.desc)}: ${formatKES(e.amt)} ${e.autoTracked ? '(auto)' : ''} ${isAdmin ? `<button onclick="removeExpense(${idx})" style="background:#b13e3e; padding:2px 10px">Remove</button>` : ''}</li>`).join('');
+    const incomes = proj.incomes || [];
+    document.getElementById('incomeList').innerHTML = incomes.map((i, idx) => `<li>${escapeHtml(i.desc)}: ${formatKES(i.amt)} ${i.autoTracked ? '(auto)' : ''} ${isAdmin ? `<button onclick="removeIncome(${idx})" style="background:#b13e3e; padding:2px 10px">Remove</button>` : ''}</li>`).join('');
+    const totalExp = expenses.reduce((s, e) => s + (e.amt || 0), 0);
+    const totalInc = incomes.reduce((s, i) => s + (i.amt || 0), 0);
+    document.getElementById('siteTotalsSpan').innerHTML = `Expenses: ${formatKES(totalExp)} | Income: ${formatKES(totalInc)} | Net: ${formatKES(totalInc - totalExp)}`;
+    const materials = proj.materials || [];
+    document.querySelector('#materialsTable tbody').innerHTML = materials.map((m, idx) => `<tr><td>${escapeHtml(m.desc)}</td><td>${m.qty}</td><td>${escapeHtml(m.area || '')}</td><td>${isAdmin ? formatKES(m.cost) : '★★★★★'}</td><td>${isAdmin ? `<button onclick="removeMaterial(${idx})">Remove</button>` : ''}</td></tr>`).join('');
+    const workers = proj.workers || [];
+    document.querySelector('#workersTable tbody').innerHTML = workers.map((w, idx) => {
+        const totalWages = (w.wagePerDay || 0) * (w.days || 0);
+        const payeAmt = (w.payePercent || 0) * totalWages / 100;
+        const nssf = w.nssfAmount || 0;
+        const nhif = w.nhifAmount || 0;
+        const advance = w.advance || 0;
+        const balance = totalWages - payeAmt - nssf - nhif - advance;
+        return `<tr>
+            <td>${escapeHtml(w.name)}</td>
+            <td>${escapeHtml(w.idNumber || '')}</td>
+            <td>${escapeHtml(w.phone || '')}</td>
+            <td>${w.date || ''}</td>
+            <td>${escapeHtml(w.jobTitle || '')}</td>
+            <td>${escapeHtml(w.workType || '')}</td>
+            <td>${w.days || 0}</td>
+            <td>${isAdmin ? formatKES(w.wagePerDay) : '★★★★★'}</td>
+            <td>${isAdmin ? formatKES(totalWages) : '★★★★★'}</td>
+            <td>${isAdmin ? formatKES(payeAmt) : '★★★★★'}</td>
+            <td>${isAdmin ? formatKES(nssf) : '★★★★★'}</td>
+            <td>${isAdmin ? formatKES(nhif) : '★★★★★'}</td>
+            <td>${isAdmin ? formatKES(advance) : '★★★★★'}</td>
+            <td>${isAdmin ? formatKES(balance) : '★★★★★'}</td>
+            <td>${w.workerType || 'regular'}</td>
+            <td>${isAdmin ? `<button onclick="editWorker('${proj.id}', ${idx})">Edit</button> <button onclick="viewWorkerDetails('${proj.id}', ${idx})">View</button> <button onclick="removeWorker(${idx})">Remove</button>` : 'Read only'}</td>
+        </tr>`;
+    }).join('');
+    const notes = proj.siteNotes || [];
+    document.getElementById('siteNotesListContainer').innerHTML = notes.map((note, idx) => `<div class="note-item"><div><strong>📅 ${escapeHtml(note.date)}</strong><br/>${escapeHtml(note.text)}</div><div><button onclick="printNote(${idx})">Print PDF</button></div></div>`).join('');
+}
+
+async function removeExpense(idx) {
+    const proj = projects.find(p => p.id === currentProjectId);
+    proj.expenses.splice(idx, 1);
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+}
+async function removeIncome(idx) {
+    const proj = projects.find(p => p.id === currentProjectId);
+    proj.incomes.splice(idx, 1);
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+}
+async function removeMaterial(idx) {
+    const proj = projects.find(p => p.id === currentProjectId);
+    proj.materials.splice(idx, 1);
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+}
+async function removeWorker(idx) {
+    const proj = projects.find(p => p.id === currentProjectId);
+    proj.workers.splice(idx, 1);
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+}
+async function addMaterial() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') return;
+    const desc = document.getElementById('matDesc').value;
+    const qty = parseFloat(document.getElementById('matQty').value);
+    const area = document.getElementById('matArea').value;
+    const cost = parseFloat(document.getElementById('matCost').value);
+    if (!desc || isNaN(qty) || isNaN(cost) || qty <= 0 || cost <= 0) {
+        alert('Please fill all fields');
+        return;
+    }
+    const proj = projects.find(p => p.id === currentProjectId);
+    if (!proj.materials) proj.materials = [];
+    proj.materials.push({ desc, qty, area, cost });
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+    document.getElementById('matDesc').value = '';
+    document.getElementById('matQty').value = '';
+    document.getElementById('matArea').value = '';
+    document.getElementById('matCost').value = '';
+    alert('Material added');
+}
+async function addWorker() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin' && currentUser.role !== 'foreman') {
+        alert('Only admin or foreman can add workers');
+        return;
+    }
+    const name = document.getElementById('workerName').value;
+    const idNumber = document.getElementById('workerIdNumber').value;
+    const phone = document.getElementById('workerPhone').value;
+    const date = document.getElementById('workerDate').value;
+    const jobTitle = document.getElementById('workerJobTitle').value;
+    const workType = document.getElementById('workType').value;
+    const days = parseFloat(document.getElementById('daysWorked').value) || 0;
+    let wagePerDay = 0, payePercent = 0, nssfAmount = 0, nhifAmount = 0, advance = 0;
+    if (currentUser.role === 'system_admin' || currentUser.role === 'admin') {
+        wagePerDay = parseFloat(document.getElementById('wagePerDay').value) || 0;
+        payePercent = parseFloat(document.getElementById('payePercent').value) || 0;
+        nssfAmount = parseFloat(document.getElementById('nssfAmount').value) || 0;
+        nhifAmount = parseFloat(document.getElementById('nhifAmount').value) || 0;
+        advance = parseFloat(document.getElementById('advanceGiven').value) || 0;
+    }
+    const workerType = document.querySelector('input[name="workerType"]:checked').value;
+    if (!name) { alert('Worker name required'); return; }
+    const proj = projects.find(p => p.id === currentProjectId);
+    if (!proj.workers) proj.workers = [];
+    proj.workers.push({ name, idNumber, phone, date, jobTitle, workType, days, wagePerDay, payePercent, nssfAmount, nhifAmount, advance, workerType });
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+    document.getElementById('workerName').value = '';
+    document.getElementById('workerIdNumber').value = '';
+    document.getElementById('workerPhone').value = '';
+    document.getElementById('workerDate').value = '';
+    document.getElementById('workerJobTitle').value = '';
+    document.getElementById('workType').value = '';
+    document.getElementById('daysWorked').value = '';
+    if (currentUser.role === 'system_admin' || currentUser.role === 'admin') {
+        document.getElementById('wagePerDay').value = '';
+        document.getElementById('payePercent').value = '0';
+        document.getElementById('nssfAmount').value = '0';
+        document.getElementById('nhifAmount').value = '0';
+        document.getElementById('advanceGiven').value = '0';
+    }
+    alert('Worker added');
+}
+async function addExpenseManual() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') return;
+    const desc = document.getElementById('expDesc').value;
+    const amt = parseFloat(document.getElementById('expAmount').value);
+    if (!desc || isNaN(amt) || amt <= 0) { alert('Valid description and amount required'); return; }
+    const proj = projects.find(p => p.id === currentProjectId);
+    if (!proj.expenses) proj.expenses = [];
+    proj.expenses.push({ desc, amt, manual: true, date: new Date().toISOString() });
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+    document.getElementById('expDesc').value = '';
+    document.getElementById('expAmount').value = '';
+    alert('Expense added');
+}
+async function addIncomeManual() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') return;
+    const desc = document.getElementById('incDesc').value;
+    const amt = parseFloat(document.getElementById('incAmount').value);
+    if (!desc || isNaN(amt) || amt <= 0) { alert('Valid description and amount required'); return; }
+    const proj = projects.find(p => p.id === currentProjectId);
+    if (!proj.incomes) proj.incomes = [];
+    proj.incomes.push({ desc, amt, manual: true, date: new Date().toISOString() });
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+    document.getElementById('incDesc').value = '';
+    document.getElementById('incAmount').value = '';
+    alert('Income recorded');
+}
+async function addSiteNote() {
+    const txt = document.getElementById('siteNoteContent').value;
+    if (!txt.trim()) return;
+    const proj = projects.find(p => p.id === currentProjectId);
+    if (!proj.siteNotes) proj.siteNotes = [];
+    proj.siteNotes.unshift({ id: Date.now(), text: txt, date: new Date().toLocaleString() });
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+    document.getElementById('siteNoteContent').value = '';
+    alert('Note added');
+}
+function printNote(idx) {
+    const proj = projects.find(p => p.id === currentProjectId);
+    const note = proj.siteNotes[idx];
+    const printDiv = document.createElement('div');
+    printDiv.innerHTML = `<div style="padding:25.4mm"><h3>Site Note: ${escapeHtml(proj.name)}</h3><p><strong>Date:</strong> ${note.date}</p><hr/><p>${escapeHtml(note.text)}</p></div>`;
+    document.body.appendChild(printDiv);
+    html2pdf().from(printDiv).set({ margin: 0, filename: `Note_${proj.name.replace(/\s/g, '_')}.pdf` }).save().then(() => document.body.removeChild(printDiv));
+}
+// ==================== WORKER DETAILS ====================
+function viewWorkerDetails(projId, workerIdx) {
+    const proj = projects.find(p => p.id === projId);
+    const w = proj.workers[workerIdx];
+    const totalWages = (w.wagePerDay || 0) * (w.days || 0);
+    const payeAmt = (w.payePercent || 0) * totalWages / 100;
+    const nssf = w.nssfAmount || 0;
+    const nhif = w.nhifAmount || 0;
+    const advance = w.advance || 0;
+    const balance = totalWages - payeAmt - nssf - nhif - advance;
+    const content = `
+        <p><strong>Name:</strong> ${escapeHtml(w.name)}</p>
+        <p><strong>ID Number:</strong> ${escapeHtml(w.idNumber || 'N/A')}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(w.phone || 'N/A')}</p>
+        <p><strong>Job Title:</strong> ${escapeHtml(w.jobTitle || 'N/A')}</p>
+        <p><strong>Work Type:</strong> ${escapeHtml(w.workType || 'N/A')}</p>
+        <p><strong>Wage per Day:</strong> ${formatKES(w.wagePerDay)}</p>
+        <hr><p><strong>Date:</strong> ${w.date || 'N/A'}</p>
+        <p><strong>Days Worked:</strong> ${w.days || 0}</p>
+        <p><strong>Total Wages:</strong> ${formatKES(totalWages)}</p>
+        <p><strong>PAYE (${w.payePercent||0}%):</strong> ${formatKES(payeAmt)}</p>
+        <p><strong>NSSF:</strong> ${formatKES(nssf)}</p>
+        <p><strong>NHIF:</strong> ${formatKES(nhif)}</p>
+        <p><strong>Advance:</strong> ${formatKES(advance)}</p>
+        <p><strong>Balance:</strong> ${formatKES(balance)}</p>
+        <hr><p><strong>Site:</strong> ${escapeHtml(proj.name)}</p>
+    `;
+    document.getElementById('workerDetailContent').innerHTML = content;
+    window.currentWorkerPrint = { proj, w, totalWages, payeAmt, nssf, nhif, advance, balance };
+    openModalAndBringToFront('workerDetailModal');
+}
+function printWorkerDetail() {
+    if (!window.currentWorkerPrint) return;
+    const { proj, w, totalWages, payeAmt, nssf, nhif, advance, balance } = window.currentWorkerPrint;
+    const printDiv = document.createElement('div');
+    printDiv.innerHTML = `<div style="padding:25.4mm"><h3>Worker Details</h3><p><strong>Name:</strong> ${escapeHtml(w.name)}</p><p><strong>ID:</strong> ${escapeHtml(w.idNumber || 'N/A')}</p><p><strong>Phone:</strong> ${escapeHtml(w.phone || 'N/A')}</p><p><strong>Job Title:</strong> ${escapeHtml(w.jobTitle || 'N/A')}</p><p><strong>Work Type:</strong> ${escapeHtml(w.workType || 'N/A')}</p><p><strong>Days:</strong> ${w.days}</p><p><strong>Total Wages:</strong> ${formatKES(totalWages)}</p><p><strong>Balance:</strong> ${formatKES(balance)}</p><hr><p><strong>Site:</strong> ${escapeHtml(proj.name)}</p></div>`;
+    document.body.appendChild(printDiv);
+    html2pdf().from(printDiv).set({ margin: 0, filename: `Worker_${w.name.replace(/\s/g, '_')}.pdf` }).save().then(() => document.body.removeChild(printDiv));
+}
+function editWorker(projId, workerIdx) {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
+        alert('Only administrators can edit workers');
+        return;
+    }
+    const proj = projects.find(p => p.id === projId);
+    const w = proj.workers[workerIdx];
+    currentEditWorkerIndex = workerIdx;
+    currentEditProjectId = projId;
+    const form = document.getElementById('editWorkerForm');
+    form.innerHTML = `
+        <div class="form-group"><label>Name</label><input type="text" id="editWorkerName" value="${escapeHtml(w.name)}"></div>
+        <div class="form-group"><label>ID Number</label><input type="text" id="editWorkerIdNumber" value="${escapeHtml(w.idNumber || '')}"></div>
+        <div class="form-group"><label>Phone</label><input type="text" id="editWorkerPhone" value="${escapeHtml(w.phone || '')}"></div>
+        <div class="form-group"><label>Date</label><input type="date" id="editWorkerDate" value="${w.date || ''}"></div>
+        <div class="form-group"><label>Job Title</label><input type="text" id="editWorkerJobTitle" value="${escapeHtml(w.jobTitle || '')}"></div>
+        <div class="form-group"><label>Work Type</label><input type="text" id="editWorkType" value="${escapeHtml(w.workType || '')}"></div>
+        <div class="form-group"><label>Days Worked</label><input type="number" id="editDaysWorked" value="${w.days || 0}"></div>
+        <div class="form-group"><label>Wage/Day (KES)</label><input type="number" id="editWagePerDay" value="${w.wagePerDay || 0}"></div>
+        <div class="form-group"><label>PAYE (%)</label><input type="number" id="editPayePercent" value="${w.payePercent || 0}" step="0.5"></div>
+        <div class="form-group"><label>NSSF (KES)</label><input type="number" id="editNssfAmount" value="${w.nssfAmount || 0}"></div>
+        <div class="form-group"><label>NHIF (KES)</label><input type="number" id="editNhifAmount" value="${w.nhifAmount || 0}"></div>
+        <div class="form-group"><label>Advance (KES)</label><input type="number" id="editAdvanceGiven" value="${w.advance || 0}"></div>
+        <div class="form-group"><label>Worker Type</label><select id="editWorkerType"><option value="regular" ${w.workerType === 'regular' ? 'selected' : ''}>Regular</option><option value="intern" ${w.workerType === 'intern' ? 'selected' : ''}>Intern</option></select></div>
+    `;
+    openModalAndBringToFront('editWorkerModal');
+}
+async function saveEditedWorker() {
+    const proj = projects.find(p => p.id === currentEditProjectId);
+    const w = proj.workers[currentEditWorkerIndex];
+    w.name = document.getElementById('editWorkerName').value;
+    w.idNumber = document.getElementById('editWorkerIdNumber').value;
+    w.phone = document.getElementById('editWorkerPhone').value;
+    w.date = document.getElementById('editWorkerDate').value;
+    w.jobTitle = document.getElementById('editWorkerJobTitle').value;
+    w.workType = document.getElementById('editWorkType').value;
+    w.days = parseFloat(document.getElementById('editDaysWorked').value) || 0;
+    w.wagePerDay = parseFloat(document.getElementById('editWagePerDay').value) || 0;
+    w.payePercent = parseFloat(document.getElementById('editPayePercent').value) || 0;
+    w.nssfAmount = parseFloat(document.getElementById('editNssfAmount').value) || 0;
+    w.nhifAmount = parseFloat(document.getElementById('editNhifAmount').value) || 0;
+    w.advance = parseFloat(document.getElementById('editAdvanceGiven').value) || 0;
+    w.workerType = document.getElementById('editWorkerType').value;
+    await updateProject(proj);
+    await loadProjects();
+    refreshModalData(proj);
+    closeModalById('editWorkerModal');
+    alert('Worker updated');
+}
+// ==================== INVOICES ====================
+function openInvoiceModal(projectId) {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
+        alert('Only administrators can generate invoices');
+        return;
+    }
+    const proj = projects.find(p => p.id === projectId);
+    if (!proj) return;
+    invoiceProjectId = projectId;
+    const paid = proj.manualTotalPaid || 0;
+    document.getElementById('invoiceClientName').value = proj.clientName || '';
+    document.getElementById('invoiceProjectName').value = proj.name;
+    document.getElementById('invoiceTotalAmount').value = formatKES(proj.agreedCost);
+    document.getElementById('invoiceTotalPaid').value = paid;
+    document.getElementById('invoiceAmount').value = 0;
+    document.getElementById('invoiceTaxRate').value = 16;
+    document.getElementById('invoiceDescription').value = `Progress Payment from ${proj.clientName || 'Client'}`;
+    document.getElementById('invoiceDueDate').value = new Date().toISOString().split('T')[0];
+    updateTaxCalculation();
+    openModalAndBringToFront('invoiceModal');
+}
+function openInvoiceModalFromModal() {
+    if (currentProjectId) openInvoiceModal(currentProjectId);
+}
+function updateTaxCalculation() {
+    const amount = parseFloat(document.getElementById('invoiceAmount').value) || 0;
+    const taxRate = parseFloat(document.getElementById('invoiceTaxRate').value) || 0;
+    const taxAmount = amount * taxRate / 100;
+    const afterTax = amount - taxAmount;
+    document.getElementById('invoiceTaxAmount').value = formatKES(taxAmount);
+    document.getElementById('invoiceAfterTax').value = formatKES(afterTax);
+    const totalPaid = parseFloat(document.getElementById('invoiceTotalPaid').value) || 0;
+    const totalContract = parseFloat(document.getElementById('invoiceTotalAmount').value.replace(/[^0-9.-]/g, '')) || 0;
+    const remaining = totalContract - totalPaid - amount;
+    document.getElementById('invoiceRemainingBalance').value = formatKES(Math.max(0, remaining));
+}
+async function generateInvoicePDF() {
+    const proj = projects.find(p => p.id === invoiceProjectId);
+    if (!proj) return;
+    const invoiceAmount = parseFloat(document.getElementById('invoiceAmount').value);
+    const taxRate = parseFloat(document.getElementById('invoiceTaxRate').value) || 0;
+    const taxAmount = invoiceAmount * taxRate / 100;
+    const afterTax = invoiceAmount - taxAmount;
+    const description = document.getElementById('invoiceDescription').value || `Progress Payment from ${proj.clientName}`;
+    const dueDate = document.getElementById('invoiceDueDate').value;
+    const totalPaid = parseFloat(document.getElementById('invoiceTotalPaid').value) || 0;
+    const remainingBalance = (proj.agreedCost || 0) - totalPaid - invoiceAmount;
+    if (isNaN(invoiceAmount) || invoiceAmount <= 0) { alert('Enter valid invoice amount'); return; }
+    if (remainingBalance < 0) { alert('Invoice amount exceeds remaining balance'); return; }
+    const newTotalPaid = totalPaid + invoiceAmount;
+    proj.manualTotalPaid = newTotalPaid;
+    if (!proj.invoiceHistory) proj.invoiceHistory = [];
+    const invoiceNumber = 'INV-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    proj.invoiceHistory.push({
+        number: invoiceNumber,
+        date: new Date().toLocaleDateString('en-KE'),
+        amount: invoiceAmount,
+        taxRate: taxRate,
+        taxAmount: taxAmount,
+        afterTax: afterTax,
+        description: description,
+        dueDate: dueDate
+    });
+    await updateProject(proj);
+    await loadProjects();
+    refreshInvoiceHistoryDisplay(proj);
+    const printDiv = document.createElement('div');
+    printDiv.innerHTML = `<div style="padding:25.4mm"><h2>TAX INVOICE</h2><p><strong>Invoice:</strong> ${invoiceNumber}</p><p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p><p><strong>Due:</strong> ${dueDate}</p><p><strong>Client:</strong> ${escapeHtml(proj.clientName)}</p><p><strong>Project:</strong> ${escapeHtml(proj.name)}</p><table border="1" cellpadding="5"><tr><th>Description</th><th>Amount (KES)</th></tr><tr><td>${escapeHtml(description)}</td><td>${invoiceAmount.toLocaleString()}</td></tr><tr><td>Tax (${taxRate}%)</td><td>${taxAmount.toLocaleString()}</td></tr><tr><td><strong>Total Payable</strong></td><td><strong>${afterTax.toLocaleString()}</strong></td></tr></table><p>Contract: ${formatKES(proj.agreedCost)} | Paid: ${formatKES(totalPaid)} | This Invoice: ${formatKES(invoiceAmount)} | Balance: ${formatKES(Math.max(0, remainingBalance))}</p></div>`;
+    document.body.appendChild(printDiv);
+    html2pdf().from(printDiv).set({ margin: 0, filename: `Invoice_${proj.name.replace(/\s/g, '_')}_${invoiceNumber}.pdf` }).save().then(() => document.body.removeChild(printDiv));
+    closeModalById('invoiceModal');
+    alert(`Invoice ${invoiceNumber} generated!`);
+}
+function refreshInvoiceHistoryDisplay(proj) {
+    const container = document.getElementById('invoiceHistoryContainer');
+    if (!container) return;
+    const invoices = proj.invoiceHistory || [];
+    if (invoices.length === 0) {
+        container.innerHTML = '<p>No invoices yet.</p>';
+        return;
+    }
+    container.innerHTML = invoices.map(inv => `<div><strong>${inv.number}</strong> - ${inv.date}<br>Amount: ${formatKES(inv.amount)} | Tax: ${inv.taxRate}% | Net: ${formatKES(inv.afterTax)}<br>${escapeHtml(inv.description)}<br>Due: ${inv.dueDate}</div><hr>`).join('');
+}
+// ==================== COMPANY SETTINGS ====================
+async function loadCompanySettings() {
+    const response = await fetch('/api/company_settings');
+    const data = await response.json();
+    document.getElementById('companyNameSpan').innerText = data.name || 'Your Company';
+    document.getElementById('companyDetailsDisplay').innerHTML = data.tagline || 'Construction & Electrical';
+    document.getElementById('footerText').innerHTML = `${data.name || 'Your Company'} | ${data.address || ''} | ${data.poBox || ''} | Tel: ${data.phone || ''} | Email: ${data.email || ''}`;
+    if (data.logoData) {
+        document.getElementById('companyLogoImg').src = data.logoData;
+        document.getElementById('companyLogoImg').style.display = 'block';
+        document.getElementById('companyLogoPlaceholder').style.display = 'none';
+        document.getElementById('settingsLogoImg').src = data.logoData;
+        document.getElementById('settingsLogoImg').style.display = 'block';
+        document.getElementById('settingsLogoPlaceholder').style.display = 'none';
+    }
+    if (data.wallpaperData) {
+        wallpaperData = data.wallpaperData;
+        document.getElementById('loginModal').style.background = `url(${wallpaperData}) center center / cover no-repeat`;
+        document.getElementById('wallpaperPreview').style.backgroundImage = `url(${wallpaperData})`;
+        document.getElementById('wallpaperPreview').style.display = 'block';
+    }
+}
+function openCompanySettings() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
+        alert('Only administrators can access settings');
+        return;
+    }
+    fetch('/api/company_settings').then(r => r.json()).then(data => {
+        document.getElementById('settingsCompanyName').value = data.name || '';
+        document.getElementById('settingsTagline').value = data.tagline || '';
+        document.getElementById('settingsPOBox').value = data.poBox || '';
+        document.getElementById('settingsAddress').value = data.address || '';
+        document.getElementById('settingsEmail').value = data.email || '';
+        document.getElementById('settingsPhone').value = data.phone || '';
+        document.getElementById('settingsPin').value = data.pin || '';
+        document.getElementById('settingsBankName').value = data.bankName || '';
+        document.getElementById('settingsBankAccount').value = data.bankAccount || '';
+        if (data.logoData) {
+            document.getElementById('settingsLogoImg').src = data.logoData;
+            document.getElementById('settingsLogoImg').style.display = 'block';
+            document.getElementById('settingsLogoPlaceholder').style.display = 'none';
+        }
+        if (data.wallpaperData) {
+            document.getElementById('wallpaperPreview').style.backgroundImage = `url(${data.wallpaperData})`;
+            document.getElementById('wallpaperPreview').style.display = 'block';
+        }
+    });
+    openModalAndBringToFront('companySettingsModal');
+}
+async function saveCompanySettings() {
+    const settings = {
+        name: document.getElementById('settingsCompanyName').value,
+        tagline: document.getElementById('settingsTagline').value,
+        poBox: document.getElementById('settingsPOBox').value,
+        address: document.getElementById('settingsAddress').value,
+        email: document.getElementById('settingsEmail').value,
+        phone: document.getElementById('settingsPhone').value,
+        pin: document.getElementById('settingsPin').value,
+        bankName: document.getElementById('settingsBankName').value,
+        bankAccount: document.getElementById('settingsBankAccount').value,
+        logoData: companyLogoData,
+        wallpaperData: wallpaperData
+    };
+    const response = await fetch('/api/company_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+    });
+    if (response.ok) {
+        await loadCompanySettings();
+        alert('Settings saved');
+        closeModalById('companySettingsModal');
+    } else {
+        alert('Error saving settings');
+    }
+}
+function uploadSettingsLogo() {
+    const file = document.getElementById('settingsLogoUpload').files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        companyLogoData = e.target.result;
+        document.getElementById('companyLogoImg').src = companyLogoData;
+        document.getElementById('companyLogoImg').style.display = 'block';
+        document.getElementById('companyLogoPlaceholder').style.display = 'none';
+        document.getElementById('settingsLogoImg').src = companyLogoData;
+        document.getElementById('settingsLogoImg').style.display = 'block';
+        document.getElementById('settingsLogoPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+function removeSettingsLogo() {
+    companyLogoData = null;
+    document.getElementById('companyLogoImg').style.display = 'none';
+    document.getElementById('companyLogoPlaceholder').style.display = 'flex';
+    document.getElementById('settingsLogoImg').style.display = 'none';
+    document.getElementById('settingsLogoPlaceholder').style.display = 'flex';
+}
+function uploadSettingsWallpaper() {
+    const file = document.getElementById('settingsWallpaperUpload').files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        wallpaperData = e.target.result;
+        document.getElementById('loginModal').style.background = `url(${wallpaperData}) center center / cover no-repeat`;
+        document.getElementById('wallpaperPreview').style.backgroundImage = `url(${wallpaperData})`;
+        document.getElementById('wallpaperPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+function removeSettingsWallpaper() {
+    wallpaperData = null;
+    document.getElementById('loginModal').style.background = 'rgba(0,0,0,0.75)';
+    document.getElementById('wallpaperPreview').style.backgroundImage = '';
+    document.getElementById('wallpaperPreview').style.display = 'none';
+}
+// ==================== USER MANAGEMENT ====================
+async function openUserManagement() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
+        alert('Only administrators can access user management');
+        return;
+    }
+    await loadUsersList();
+    await loadPendingRequests();
+    document.getElementById('sysAdminSection').style.display = currentUser.role === 'system_admin' ? 'block' : 'none';
+    document.getElementById('pendingRequestsContainer').style.display = currentUser.role === 'system_admin' ? 'block' : 'none';
+    openModalAndBringToFront('userMgmtModal');
+}
+async function loadUsersList() {
+    const response = await fetch('/api/users');
+    const data = await response.json();
+    const users = data.users || [];
+    const container = document.getElementById('userListContainer');
+    container.innerHTML = '<h4>Registered Users</h4><table class="user-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Assigned Sites</th><th>Actions</th></tr></thead><tbody>';
+    for (let u of users) {
+        let assignedText = '—';
+        if (u.assignedSiteIds && u.assignedSiteIds.length) {
+            const siteNames = u.assignedSiteIds.map(sid => projects.find(p => p.id === sid)?.name || 'Deleted').join(', ');
+            assignedText = siteNames;
+        }
+        container.innerHTML += `<tr><td>${escapeHtml(u.fullName)}</td><td>${escapeHtml(u.username)}</td><td><span class="role-badge ${u.role === 'admin' ? 'role-admin-badge' : 'role-foreman-badge'}">${u.role}</span></td><td>${assignedText} ${u.role === 'foreman' ? `<button class="edit-foreman-btn" onclick="editForemanSites('${u.id}')">Edit Sites</button>` : ''}</td><td>${u.id !== currentUser.id ? `<span class="danger-text" onclick="deleteUser('${u.id}')">Delete</span>` : '<span class="warning-text">You</span>'}</td></tr>`;
+    }
+    container.innerHTML += '</tbody></table>';
+}
+async function deleteUser(userId) {
+    if (!confirm('Delete this user?')) return;
+    const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadUsersList();
+        alert('User deleted');
+    } else {
+        alert('Error deleting user');
+    }
+}
+async function editForemanSites(userId) {
+    const user = (await (await fetch('/api/users')).json()).users.find(u => u.id === userId);
+    if (!user) return;
+    const container = document.getElementById('editForemanContent');
+    container.innerHTML = `<div class="form-group"><label>Select assigned sites</label><select id="editSiteSelect" class="site-select-multiple" multiple>${projects.map(p => `<option value="${p.id}" ${user.assignedSiteIds.includes(p.id) ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('')}</select></div>`;
+    window.editForemanUserId = userId;
+    openModalAndBringToFront('editForemanSitesModal');
+}
+async function saveForemanSites() {
+    const select = document.getElementById('editSiteSelect');
+    const selectedIds = Array.from(select.selectedOptions).map(opt => opt.value);
+    const response = await fetch(`/api/users/${window.editForemanUserId}/sites`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignedSiteIds: selectedIds })
+    });
+    if (response.ok) {
+        alert('Foreman sites updated');
+        closeModalById('editForemanSitesModal');
+        await loadUsersList();
+    } else {
+        alert('Error updating sites');
+    }
+}
+async function changePassword() {
+    const currentPwd = document.getElementById('changeCurrentPwd').value;
+    const newPwd = document.getElementById('changeNewPwd').value;
+    const confirmPwd = document.getElementById('changeConfirmPwd').value;
+    if (newPwd !== confirmPwd) {
+        document.getElementById('pwdChangeMsg').innerText = 'New passwords do not match';
+        document.getElementById('pwdChangeMsg').style.display = 'block';
+        return;
+    }
+    if (newPwd.length < 4) {
+        document.getElementById('pwdChangeMsg').innerText = 'Password must be at least 4 characters';
+        document.getElementById('pwdChangeMsg').style.display = 'block';
+        return;
+    }
+    const response = await fetch('/api/change_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd })
+    });
+    const data = await response.json();
+    if (data.success) {
+        alert('Password changed successfully');
+        document.getElementById('changeCurrentPwd').value = '';
+        document.getElementById('changeNewPwd').value = '';
+        document.getElementById('changeConfirmPwd').value = '';
+        document.getElementById('pwdChangeMsg').style.display = 'none';
+    } else {
+        document.getElementById('pwdChangeMsg').innerText = data.error;
+        document.getElementById('pwdChangeMsg').style.display = 'block';
+    }
+}
+async function updateAdminCredentials() {
+    if (currentUser.role !== 'system_admin') return;
+    const username = document.getElementById('adminUsername').value.trim();
+    const newPassword = document.getElementById('adminNewPassword').value;
+    const confirm = document.getElementById('adminConfirmPassword').value;
+    if (newPassword && newPassword !== confirm) {
+        document.getElementById('adminUpdateMsg').innerText = 'Passwords do not match';
+        document.getElementById('adminUpdateMsg').style.display = 'block';
+        return;
+    }
+    const response = await fetch('/api/update_admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, newPassword })
+    });
+    if (response.ok) {
+        alert('Admin credentials updated');
+        document.getElementById('adminUpdateMsg').innerText = 'Updated successfully';
+        document.getElementById('adminUpdateMsg').style.display = 'block';
+        setTimeout(() => document.getElementById('adminUpdateMsg').style.display = 'none', 3000);
+        if (username) currentUser.username = username;
+    } else {
+        alert('Error updating admin');
+    }
+}
+// ==================== PENDING ADMIN REQUESTS ====================
+async function loadPendingRequests() {
+    if (currentUser.role !== 'system_admin') return;
+    const response = await fetch('/api/pending_requests');
+    const data = await response.json();
+    pendingAdminRequests = data.requests || [];
+    const container = document.getElementById('pendingRequestsList');
+    if (pendingAdminRequests.length === 0) {
+        container.innerHTML = '<p>No pending requests</p>';
+        return;
+    }
+    container.innerHTML = pendingAdminRequests.map((req, idx) => `
+        <div class="pending-request-item">
+            <strong>${escapeHtml(req.fullName)}</strong> (@${escapeHtml(req.username)})<br>
+            Requested: ${new Date(req.timestamp * 1000).toLocaleString()}<br>
+            Expires: ${new Date(req.expiresAt * 1000).toLocaleString()}<br>
+            <button class="approve-btn" onclick="approveAdminRequest('${req.id}')">Approve</button>
+            <button class="reject-btn" onclick="rejectAdminRequest('${req.id}')">Reject</button>
+        </div>
+    `).join('');
+}
+async function approveAdminRequest(requestId) {
+    const response = await fetch(`/api/pending_requests/${requestId}/approve`, { method: 'POST' });
+    if (response.ok) {
+        await loadPendingRequests();
+        await loadUsersList();
+        alert('Admin approved');
+    } else {
+        alert('Error approving');
+    }
+}
+async function rejectAdminRequest(requestId) {
+    const response = await fetch(`/api/pending_requests/${requestId}/reject`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadPendingRequests();
+        alert('Request rejected');
+    } else {
+        alert('Error rejecting');
+    }
+}
+// ==================== JOBS & SUGGESTIONS ====================
+async function loadJobs() {
+    const response = await fetch('/api/jobs');
+    const data = await response.json();
+    window.jobs = data.jobs || [];
+}
+function renderJobBoard() {
+    const container = document.getElementById('jobBoardContainer');
+    if (!container) return;
+    if (!window.jobs || window.jobs.length === 0) {
+        container.innerHTML = '<p>No job postings</p>';
+        return;
+    }
+    container.innerHTML = window.jobs.map((job, idx) => `
+        <div class="job-card">
+            <h3>${escapeHtml(job.title)}</h3>
+            <p><strong>Location:</strong> ${escapeHtml(job.location)}</p>
+            <p>${escapeHtml(job.description)}</p>
+            <p><strong>Contact:</strong> ${escapeHtml(job.contact)}</p>
+            <p><small>Posted: ${new Date(job.date).toLocaleDateString()}</small></p>
+            ${(currentUser && (currentUser.role === 'system_admin' || currentUser.role === 'admin')) ? `<button onclick="deleteJob(${job.id})">Delete Job</button>` : ''}
+        </div>
+    `).join('');
+}
+async function postJob() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
+        alert('Only administrators can post jobs');
+        return;
+    }
+    const title = document.getElementById('jobTitle').value.trim();
+    const location = document.getElementById('jobLocation').value.trim();
+    const description = document.getElementById('jobDescription').value.trim();
+    const contact = document.getElementById('jobContact').value.trim();
+    if (!title || !description) {
+        alert('Title and description required');
+        return;
+    }
+    const response = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, location, description, contact })
+    });
+    if (response.ok) {
+        await loadJobs();
+        renderJobBoard();
+        renderPublicJobBoard();
+        document.getElementById('jobTitle').value = '';
+        document.getElementById('jobLocation').value = '';
+        document.getElementById('jobDescription').value = '';
+        document.getElementById('jobContact').value = '';
+        alert('Job posted');
+    } else {
+        alert('Error posting job');
+    }
+}
+async function deleteJob(jobId) {
+    if (!confirm('Delete this job?')) return;
+    const response = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadJobs();
+        renderJobBoard();
+        renderPublicJobBoard();
+    } else {
+        alert('Error deleting job');
+    }
+}
+async function loadSuggestions() {
+    const response = await fetch('/api/suggestions');
+    const data = await response.json();
+    window.suggestions = data.suggestions || [];
+}
+function renderSuggestions() {
+    const container = document.getElementById('suggestionsContainer');
+    if (!container) return;
+    if (!window.suggestions || window.suggestions.length === 0) {
+        container.innerHTML = '<p>No suggestions yet</p>';
+        return;
+    }
+    container.innerHTML = window.suggestions.map((sug, idx) => `
+        <div class="suggestion-card">
+            <p><strong>${escapeHtml(sug.name || 'Anonymous')}</strong> - ${new Date(sug.date).toLocaleString()}</p>
+            <p>${escapeHtml(sug.text)}</p>
+            ${(currentUser && (currentUser.role === 'system_admin' || currentUser.role === 'admin')) ? `<button onclick="deleteSuggestion(${sug.id})">Delete</button>` : ''}
+        </div>
+    `).join('');
+}
+async function submitSuggestion() {
+    const name = document.getElementById('suggestionName').value.trim();
+    const text = document.getElementById('suggestionText').value.trim();
+    if (!text) {
+        alert('Please enter a suggestion');
+        return;
+    }
+    const response = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name || 'Anonymous', text })
+    });
+    if (response.ok) {
+        await loadSuggestions();
+        renderSuggestions();
+        document.getElementById('suggestionName').value = '';
+        document.getElementById('suggestionText').value = '';
+        alert('Thank you for your suggestion');
+    } else {
+        alert('Error submitting suggestion');
+    }
+}
+async function deleteSuggestion(suggestionId) {
+    if (!confirm('Delete this suggestion?')) return;
+    const response = await fetch(`/api/suggestions/${suggestionId}`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadSuggestions();
+        renderSuggestions();
+    } else {
+        alert('Error deleting suggestion');
+    }
+}
+function renderPublicJobBoard() {
+    const container = document.getElementById('publicJobBoardList');
+    if (!container) return;
+    if (!window.jobs || window.jobs.length === 0) {
+        container.innerHTML = '<p>No job openings at the moment</p>';
+        return;
+    }
+    container.innerHTML = window.jobs.map(job => `
+        <div class="public-job-card">
+            <h3>${escapeHtml(job.title)}</h3>
+            <p><strong>Location:</strong> ${escapeHtml(job.location)}</p>
+            <p>${escapeHtml(job.description)}</p>
+            <p><strong>Contact:</strong> ${escapeHtml(job.contact)}</p>
+            <p><small>Posted: ${new Date(job.date).toLocaleDateString()}</small></p>
+        </div>
+    `).join('');
+}
+// ==================== RECOMMENDATION LETTER ====================
+function toggleRecPersonFields() {
+    const type = document.getElementById('recPersonType').value;
+    document.getElementById('recWorkerDiv').style.display = type === 'worker' ? 'block' : 'none';
+    document.getElementById('recInternDiv').style.display = type === 'intern' ? 'block' : 'none';
+    if (type === 'worker') updateWorkerSelectForRecommendation();
+}
+function updateWorkerSelectForRecommendation() {
+    const siteId = document.getElementById('recSiteSelect').value;
+    const proj = projects.find(p => p.id === siteId);
+    const workerSelect = document.getElementById('recWorkerSelect');
+    if (proj && proj.workers && proj.workers.length) {
+        workerSelect.innerHTML = '<option value="">-- Select Worker --</option>' + proj.workers.map((w, idx) => `<option value="${idx}">${escapeHtml(w.name)} (${w.jobTitle || w.workType || 'General'})</option>`).join('');
+    } else {
+        workerSelect.innerHTML = '<option value="">No workers available</option>';
+    }
+}
+function autoFillRecommendation() {
+    const type = document.getElementById('recPersonType').value;
+    if (type === 'worker') {
+        const workerIdx = document.getElementById('recWorkerSelect').value;
+        const siteId = document.getElementById('recSiteSelect').value;
+        const proj = projects.find(p => p.id === siteId);
+        if (proj && workerIdx !== '' && proj.workers[parseInt(workerIdx)]) {
+            const worker = proj.workers[parseInt(workerIdx)];
+            const workerName = worker.name;
+            const nameWithApostrophe = workerName.endsWith('s') ? `${workerName}'` : `${workerName}'s`;
+            const jobTitle = worker.jobTitle || '';
+            const workType = worker.workType || '';
+            document.getElementById('recJobTitle').value = jobTitle;
+            document.getElementById('recWorkType').value = workType;
+            const summary = `${nameWithApostrophe} role included but not limited to ${workType}. He demonstrated excellent skills, punctuality, and dedication. He also completed assigned tasks efficiently.`;
+            document.getElementById('recSummary').value = summary;
+            if (!document.getElementById('recJoinDate').value && worker.date) {
+                document.getElementById('recJoinDate').value = worker.date;
+            }
+            const today = new Date().toISOString().split('T')[0];
+            if (!document.getElementById('recLeaveDate').value) {
+                document.getElementById('recLeaveDate').value = today;
+            }
+            alert('Auto-filled from worker record');
+        } else {
+            alert('Please select a worker first');
+        }
+    } else if (type === 'intern') {
+        const internName = document.getElementById('recInternName').value;
+        if (internName) {
+            const nameWithApostrophe = internName.endsWith('s') ? `${internName}'` : `${internName}'s`;
+            document.getElementById('recSummary').value = `${nameWithApostrophe} internship was completed with commendable performance. He showed great willingness to learn and teamwork.`;
+            const today = new Date().toISOString().split('T')[0];
+            if (!document.getElementById('recLeaveDate').value) {
+                document.getElementById('recLeaveDate').value = today;
+            }
+            alert('Auto-filled for intern');
+        } else {
+            alert('Please enter intern name');
+        }
+    }
+}
+async function generateRecommendationPDF() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
+        alert('Only administrators can generate recommendation letters');
+        return;
+    }
+    const type = document.getElementById('recPersonType').value;
+    let personName = '', idNumberDisplay = '';
+    const siteId = document.getElementById('recSiteSelect').value;
+    const proj = projects.find(p => p.id === siteId);
+    if (!proj) { alert('Please select a site'); return; }
+    if (type === 'worker') {
+        const workerIdx = document.getElementById('recWorkerSelect').value;
+        if (workerIdx === '' || !proj.workers[parseInt(workerIdx)]) { alert('Please select a worker'); return; }
+        const worker = proj.workers[parseInt(workerIdx)];
+        personName = worker.name;
+        idNumberDisplay = worker.idNumber ? ` (ID: ${worker.idNumber})` : '';
+    } else {
+        personName = document.getElementById('recInternName').value.trim();
+        if (!personName) { alert('Please enter intern name'); return; }
+    }
+    const joinDate = document.getElementById('recJoinDate').value;
+    const leaveDate = document.getElementById('recLeaveDate').value;
+    const jobTitle = document.getElementById('recJobTitle').value.trim() || 'Staff Member';
+    const userSummary = document.getElementById('recSummary').value.trim();
+    if (!userSummary) { alert('Please enter or auto-fill summary'); return; }
+    const startFormatted = joinDate ? new Date(joinDate).toLocaleDateString('en-GB') : 'N/A';
+    const endFormatted = leaveDate ? new Date(leaveDate).toLocaleDateString('en-GB') : 'N/A';
+    const companyName = document.getElementById('companyNameSpan').innerText;
+    const currentDate = new Date().toLocaleDateString('en-GB');
+    const printDiv = document.createElement('div');
+    printDiv.innerHTML = `
+        <div style="padding:25.4mm; font-family:'Times New Roman', serif;">
+            <div style="text-align:center; margin-bottom:8mm;">
+                <h1>${escapeHtml(companyName)}</h1>
+                <p>${escapeHtml(document.getElementById('companyDetailsDisplay').innerText)}</p>
+                <hr>
+            </div>
+            <p><strong>Date:</strong> ${currentDate}</p>
+            <p>To Whom It May Concern</p>
+            <p><strong>RE: LETTER OF RECOMMENDATION - ${escapeHtml(personName).toUpperCase()}</strong></p>
+            <p>This is to confirm that ${escapeHtml(personName)}${idNumberDisplay} was employed with ${escapeHtml(companyName)} as ${escapeHtml(jobTitle)} from ${startFormatted} to ${endFormatted}.</p>
+            <p>${escapeHtml(userSummary)}</p>
+            <p>Based on his performance and conduct, we recommend ${personName.split(' ')[0]} wholeheartedly for any future opportunities.</p>
+            <p>Yours faithfully,</p>
+            <div style="margin-top:10mm;"><strong>${escapeHtml(currentUser.fullName)}</strong><br>Administration Manager</div>
+        </div>
+    `;
+    document.body.appendChild(printDiv);
+    html2pdf().from(printDiv).set({ margin: 0, filename: `Recommendation_${personName.replace(/\s/g, '_')}.pdf` }).save().then(() => document.body.removeChild(printDiv));
+    alert('Recommendation letter generated');
+}
+// ==================== DATA IMPORT/EXPORT ====================
+async function exportData() {
+    const response = await fetch('/api/export/json');
+    const data = await response.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `erp_backup_${new Date().toISOString().slice(0,19)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('Data exported');
+}
+function exportToCSV() {
+    let csv = "ID,Name,Location,Client,Status,Agreed Cost\n";
+    projects.forEach(p => {
+        csv += `${p.id},${p.name},${p.location || ''},${p.clientName || ''},${p.status},${p.agreedCost}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `projects_${new Date().toISOString().slice(0,19)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('CSV exported');
+}
+document.getElementById('importFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+        try {
+            const data = JSON.parse(ev.target.result);
+            const response = await fetch('/api/import/json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (response.ok) {
+                alert('Import successful');
+                await loadProjects();
+            } else {
+                alert('Import failed');
+            }
+        } catch (err) {
+            alert('Invalid JSON file');
+        }
+    };
+    reader.readAsText(file);
+});
+document.getElementById('csvImportFile').addEventListener('change', (e) => {
+    alert('CSV import not implemented in demo, but backend supports it');
+});
+// ==================== DELETE SITES ====================
+function promptDeleteSitePassword() {
+    if (currentUser.role !== 'system_admin') {
+        alert('Only System Admin can delete sites');
+        return;
+    }
+    deleteSiteAccessGranted = false;
+    document.getElementById('deleteSitePassword').value = '';
+    document.getElementById('passwordError').style.display = 'none';
+    openModalAndBringToFront('passwordPromptModal');
+}
+function closePasswordPrompt() {
+    closeModalById('passwordPromptModal');
+}
+async function verifyDeleteSitePassword() {
+    deleteSiteAccessGranted = true;
+    closePasswordPrompt();
+    switchPanel('deleteSitePanel');
+    renderDeleteSitesList();
+}
+function renderDeleteSitesList() {
+    const container = document.getElementById('deleteSitesListContainer');
+    if (projects.length === 0) {
+        container.innerHTML = '<p>No projects</p>';
+        return;
+    }
+    container.innerHTML = projects.map(proj => `
+        <div class="project-card delete-site-card">
+            <div class="project-name">${escapeHtml(proj.name)}</div>
+            <div class="project-meta">Status: ${proj.status} | Client: ${escapeHtml(proj.clientName)}</div>
+            <button class="delete-site-btn" onclick="deleteSiteCompletely('${proj.id}')">Permanently Delete Site</button>
+        </div>
+    `).join('');
+}
+async function deleteSiteCompletely(projectId) {
+    if (!confirm('⚠️ PERMANENT DELETION: This cannot be undone. Are you sure?')) return;
+    const response = await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadProjects();
+        renderDeleteSitesList();
+        alert('Site permanently deleted');
+    } else {
+        alert('Error deleting site');
+    }
+}
+// ==================== FINANCIAL REPORT ====================
+function showFullFinancialReport() {
+    let totalNet = 0, totalExp = 0, totalTax = 0;
+    projects.forEach(p => {
+        (p.invoiceHistory || []).forEach(inv => {
+            totalNet += (inv.afterTax || inv.amount);
+            totalTax += (inv.taxAmount || 0);
+        });
+        totalExp += (p.expenses || []).reduce((s, e) => s + (e.amt || 0), 0);
+    });
+    const profit = totalNet - totalExp;
+    let html = `<h3>Complete Financial Report</h3><p>Total Net Income: ${formatKES(totalNet)}</p><p>Total Expenses: ${formatKES(totalExp)}</p><p>Net Profit: ${formatKES(profit)}</p><p>Total Tax Collected: ${formatKES(totalTax)}</p><hr><h4>Per Site Breakdown</h4>`;
+    projects.forEach(p => {
+        let siteNet = 0, siteTax = 0;
+        (p.invoiceHistory || []).forEach(inv => {
+            siteNet += (inv.afterTax || inv.amount);
+            siteTax += (inv.taxAmount || 0);
+        });
+        const siteExp = (p.expenses || []).reduce((s, e) => s + (e.amt || 0), 0);
+        const siteProfit = siteNet - siteExp;
+        html += `<p><strong>${escapeHtml(p.name)}</strong>: Net Income ${formatKES(siteNet)} | Tax ${formatKES(siteTax)} | Expenses ${formatKES(siteExp)} | Profit ${formatKES(siteProfit)}</p>`;
+    });
+    document.getElementById('financialDetailsContent').innerHTML = html;
+    openModalAndBringToFront('financialModal');
+}
+// ==================== GENERAL UI ====================
+function switchPanel(panelId) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+    document.getElementById(panelId).classList.add('active-panel');
+    document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'));
+    if (panelId === 'activePanel') document.querySelector('.main-tab-btn[onclick*="activePanel"]').classList.add('active');
+    else if (panelId === 'completedPanel') document.querySelector('.main-tab-btn[onclick*="completedPanel"]').classList.add('active');
+    else if (panelId === 'globalPanel') document.querySelector('.main-tab-btn[onclick*="globalPanel"]').classList.add('active');
+    else if (panelId === 'deleteSitePanel' && deleteSiteAccessGranted) document.getElementById('deleteSiteTabBtn').classList.add('active');
+    else if (panelId === 'jobBoardPanel') document.getElementById('jobBoardTabBtn').classList.add('active');
+    else if (panelId === 'suggestionsPanel') document.getElementById('suggestionsTabBtn').classList.add('active');
+    if (panelId === 'deleteSitePanel') renderDeleteSitesList();
+    if (panelId === 'globalPanel') renderOverview();
+    if (panelId === 'recommendationPanel') {
+        const siteSelect = document.getElementById('recSiteSelect');
+        siteSelect.innerHTML = projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+        siteSelect.onchange = updateWorkerSelectForRecommendation;
+        updateWorkerSelectForRecommendation();
+    }
+}
+function showLoginTab(tab) {
+    document.getElementById('loginPanel').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('signupPanel').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('forgotPanel').style.display = tab === 'forgot' ? 'block' : 'none';
+    document.getElementById('jobsPanel').style.display = tab === 'jobs' ? 'block' : 'none';
+    document.getElementById('loginTabBtn').style.background = tab === 'login' ? '#1f6e6c' : '#6c8a9c';
+    document.getElementById('signupTabBtn').style.background = tab === 'signup' ? '#1f6e6c' : '#6c8a9c';
+    document.getElementById('forgotTabBtn').style.background = tab === 'forgot' ? '#1f6e6c' : '#e67e22';
+    if (tab === 'jobs') renderPublicJobBoard();
+    if (tab === 'signup') updateSiteDropdowns();
+}
+function updateSiteDropdowns() {
+    const select = document.getElementById('signupAssignedSites');
+    if (select) {
+        select.innerHTML = projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+    }
+}
+async function attemptSignup() {
+    const fullName = document.getElementById('signupName').value.trim();
+    const username = document.getElementById('signupUsername').value.trim().toLowerCase();
+    const password = document.getElementById('signupPassword').value;
+    const confirm = document.getElementById('signupConfirmPassword').value;
+    const securityKey = document.getElementById('signupSecurityKey').value.trim();
+    const role = document.getElementById('signupRole').value;
+    const assignedSitesSelect = document.getElementById('signupAssignedSites');
+    const assignedSiteIds = assignedSitesSelect ? Array.from(assignedSitesSelect.selectedOptions).map(opt => opt.value) : [];
+    if (!fullName || !username || !password || !securityKey) {
+        document.getElementById('signupError').innerText = 'All fields required';
+        document.getElementById('signupError').style.display = 'block';
+        return;
+    }
+    if (password !== confirm) {
+        document.getElementById('signupError').innerText = 'Passwords do not match';
+        document.getElementById('signupError').style.display = 'block';
+        return;
+    }
+    if (password.length < 4) {
+        document.getElementById('signupError').innerText = 'Password must be at least 4 characters';
+        document.getElementById('signupError').style.display = 'block';
+        return;
+    }
+    const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, username, password, securityKey, role, assignedSiteIds })
+    });
+    const data = await response.json();
+    if (data.success) {
+        alert(data.message);
+        showLoginTab('login');
+        document.getElementById('signupName').value = '';
+        document.getElementById('signupUsername').value = '';
+        document.getElementById('signupPassword').value = '';
+        document.getElementById('signupConfirmPassword').value = '';
+        document.getElementById('signupSecurityKey').value = '';
+    } else {
+        document.getElementById('signupError').innerText = data.error;
+        document.getElementById('signupError').style.display = 'block';
+    }
+}
+async function resetForgottenPassword() {
+    const username = document.getElementById('forgotUsername').value.trim().toLowerCase();
+    const securityKey = document.getElementById('forgotSecurityKey').value;
+    const newPassword = document.getElementById('forgotNewPassword').value;
+    const confirm = document.getElementById('forgotConfirmPassword').value;
+    if (newPassword !== confirm) {
+        document.getElementById('forgotError').innerText = 'Passwords do not match';
+        document.getElementById('forgotError').style.display = 'block';
+        return;
+    }
+    if (newPassword.length < 4) {
+        document.getElementById('forgotError').innerText = 'Password must be at least 4 characters';
+        document.getElementById('forgotError').style.display = 'block';
+        return;
+    }
+    const response = await fetch('/api/reset_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, securityKey, newPassword })
+    });
+    const data = await response.json();
+    if (data.success) {
+        document.getElementById('forgotSuccess').innerText = data.message;
+        document.getElementById('forgotSuccess').style.display = 'block';
+        setTimeout(() => showLoginTab('login'), 2000);
+    } else {
+        document.getElementById('forgotError').innerText = data.error;
+        document.getElementById('forgotError').style.display = 'block';
+    }
+}
+function closeModalById(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'none';
+}
+function openModalAndBringToFront(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'block';
+}
+function attachModalTabHandlers() {
+    document.querySelectorAll('.modal-subtab').forEach(btn => {
+        btn.removeEventListener('click', modalTabHandler);
+        btn.addEventListener('click', modalTabHandler);
+    });
+}
+function modalTabHandler(e) {
+    const tabName = e.currentTarget.getAttribute('data-tab');
+    document.querySelectorAll('.modal-subtab').forEach(b => b.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    document.querySelectorAll('.subtab-content').forEach(c => c.style.display = 'none');
+    document.getElementById(`subtab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).style.display = 'block';
+}
+// Initialize
+checkSession();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Safety Training</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: Arial; padding: 20px; background: #eef2f5; }
+        .container { max-width: 800px; margin: auto; background: white; border-radius: 20px; padding: 20px; }
+        .course { border-bottom: 1px solid #eee; padding: 15px 0; }
+        button { background: #1f6e6c; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-hard-hat"></i> Safety Training (Role: {{ user_role }})</h1>
+    <a href="/">← Back to Main Site</a>
+    {% for course in courses %}
+    <div class="course">
+        <h3>{{ course.title }}</h3>
+        {% if progress[course.id] and progress[course.id].completed %}
+            <p class="completed">✓ Completed - Expires: {{ progress[course.id].expiry }}</p>
+        {% else %}
+            <button onclick="completeSafety({{ course.id }})">Complete Training</button>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+<script>
+    function completeSafety(courseId) {
+        fetch(`/training/safety/complete/${courseId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ score: 90 })
+        }).then(r => r.json()).then(data => {
+            if(data.success) location.reload();
+            else alert("You need a higher score to pass.");
+        });
+    }
+</script>
+</body>
+</html>
