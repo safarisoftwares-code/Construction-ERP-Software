@@ -261,7 +261,7 @@
     </div>
     <div class="worker-type-select"><label><input type="radio" name="workerType" value="regular" checked> Regular Worker</label>&nbsp;&nbsp;<label><input type="radio" name="workerType" value="intern"> Intern/Attachee</label></div>
     <button onclick="addWorker()">Add Worker</button>
-    <table id="workersTable"><thead><tr><th>Name</th><th>ID No.</th><th>Phone</th><th>Date</th><th>Job Title</th><th>Work Type</th><th>Days</th><th>Wage/Day</th><th>Total Wages</th><th>PAYE</th><th>NSSF</th><th>NHIF</th><th>Advance</th><th>Balance</th><th>Type</th><th>Actions</th></tr></thead><tbody></tbody></table>
+    <table id="workersTable"><thead><tr><th>Name</th><th>ID No.</th><th>Phone</th><th>Date</th><th>Job Title</th><th>Work Type</th><th>Days</th><th>Wage/Day</th><th>Total Wages</th><th>PAYE</th><th>NSSF</th><th>NHIF</th><th>Advance</th><th>Balance</th><th>Type</th><th>Actions</th></table></thead><tbody></tbody></table>
 </div>
 <div id="subtabSiteNotes" class="subtab-content" style="display:none"><h3><i class="fas fa-pencil-alt"></i> Notes for this Site</h3><div class="form-row"><div class="form-group" style="flex:3"><textarea id="siteNoteContent" rows="2" placeholder="Add a note..."></textarea></div><button onclick="addSiteNote()"><i class="fas fa-save"></i> Save Note</button></div><div id="siteNotesListContainer" class="notes-list"></div></div>
 <div id="subtabGenerateInvoice" class="subtab-content" style="display:none"><h3><i class="fas fa-file-invoice-dollar"></i> Generate Invoice for this Site</h3><button id="invoiceButtonInModal" class="invoice-btn-modal" onclick="openInvoiceModalFromModal()" style="background:#27ae60; width:100%; margin-top:10px;"><i class="fas fa-file-pdf"></i> Click to Generate Invoice</button></div>
@@ -338,6 +338,9 @@ function formatKES(amount) {
     if (amount === undefined || amount === null) return "KES 0";
     return "KES " + amount.toLocaleString('en-KE');
 }
+function formatStars() {
+    return "★★★★★★";
+}
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     const btn = input.parentElement.querySelector('.toggle-password');
@@ -355,6 +358,25 @@ window.onclick = function(event) { if (event.target.classList.contains('modal'))
 function bringToFront(modalElement) { if (!modalElement) return; modalZCounter += 10; modalElement.style.zIndex = modalZCounter; }
 function openModalAndBringToFront(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.style.display = 'block'; bringToFront(modal); } }
 function closeModalById(modalId) { const modal = document.getElementById(modalId); if (modal) modal.style.display = 'none'; }
+
+// Clear all login/signup/forgot input fields
+function clearLoginFields() {
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('signupName').value = '';
+    document.getElementById('signupUsername').value = '';
+    document.getElementById('signupPassword').value = '';
+    document.getElementById('signupConfirmPassword').value = '';
+    document.getElementById('signupSecurityKey').value = '';
+    document.getElementById('forgotUsername').value = '';
+    document.getElementById('forgotSecurityKey').value = '';
+    document.getElementById('forgotNewPassword').value = '';
+    document.getElementById('forgotConfirmPassword').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('signupError').style.display = 'none';
+    document.getElementById('forgotError').style.display = 'none';
+    document.getElementById('forgotSuccess').style.display = 'none';
+}
 
 // ==================== LOGIN / SESSION ====================
 async function attemptLogin() {
@@ -408,6 +430,7 @@ async function logout() {
     document.getElementById('loginModal').style.display = 'flex';
     bringToFront(document.getElementById('loginModal'));
     showLoginTab('login');
+    clearLoginFields();  // Clear all username/password fields after logout
 }
 async function checkSession() {
     const response = await fetch('/api/current_user');
@@ -475,9 +498,15 @@ function renderRegistrationsForWorkshop(workshopId) {
     if (regs.length === 0) return '<p>No registrations yet.</p>';
     let html = '<table style="width:100%;"><thead><tr><th>Name</th><th>Worker ID</th><th>Phone</th><th>Email</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
     regs.forEach(reg => {
-        html += `<tr><td>${escapeHtml(reg.name)}</td><td>${escapeHtml(reg.worker_id || '')}</td><td>${escapeHtml(reg.phone)}</td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.department || '')}</td>
-        <td class="${reg.status === 'pending' ? 'status-pending' : (reg.status === 'approved' ? 'status-approved' : 'status-rejected')}">${reg.status}</td>
-        <td>${reg.status === 'pending' ? `<button onclick="approveRegistration(${reg.id})" style="background:#27ae60;">Approve</button> <button onclick="rejectRegistration(${reg.id})" style="background:#e74c3c;">Reject</button>` : (reg.status === 'approved' ? '✔ Approved' : '✘ Rejected')}</td></tr>`;
+        html += `<tr>
+            <td>${escapeHtml(reg.name)}</td>
+            <td>${escapeHtml(reg.worker_id || '')}</td>
+            <td>${escapeHtml(reg.phone)}</td>
+            <td>${escapeHtml(reg.email)}</td>
+            <td>${escapeHtml(reg.department || '')}</td>
+            <td class="${reg.status === 'pending' ? 'status-pending' : (reg.status === 'approved' ? 'status-approved' : 'status-rejected')}">${reg.status}</td>
+            <td>${reg.status === 'pending' ? `<button onclick="approveRegistration(${reg.id})" style="background:#27ae60;">Approve</button> <button onclick="rejectRegistration(${reg.id})" style="background:#e74c3c;">Reject</button>` : (reg.status === 'approved' ? '✔ Approved' : '✘ Rejected')}</td>
+        </tr>`;
     });
     html += '</tbody></table>';
     return html;
@@ -574,7 +603,7 @@ function renderSecurityAdminPanel() {
     else {
         html += '<table style="width:100%;"><thead><tr><th>Title</th><th>Description</th><th>Actions</th></tr></thead><tbody>';
         window.securityCourses.forEach(c => {
-            html += `<tr><td>${escapeHtml(c.title)}</td><td>${escapeHtml(c.description)}</td><td><button onclick="editSecurityCourse(${c.id})">Edit</button><button onclick="deleteSecurityCourse(${c.id})" style="background:#c0392b;">Delete</button></td></tr>`;
+            html += `<tr><td>${escapeHtml(c.title)}</td><td>${escapeHtml(c.description)}</td><td><button onclick="editSecurityCourse(${c.id})">Edit</button> <button onclick="deleteSecurityCourse(${c.id})" style="background:#c0392b;">Delete</button></td></tr>`;
         });
         html += '</tbody></table>';
     }
@@ -668,7 +697,7 @@ function renderSafetyAdminPanel() {
     else {
         html += '<table style="width:100%;"><thead><tr><th>Title</th><th>Role</th><th>Pass Score</th><th>Expiry (days)</th><th>Actions</th></tr></thead><tbody>';
         window.safetyCourses.forEach(c => {
-            html += `<tr><td>${escapeHtml(c.title)}</td><td>${c.role}</td><td>${c.pass_score}</td><td>${c.expiry_days}</td><td><button onclick="editSafetyCourse(${c.id})">Edit</button><button onclick="deleteSafetyCourse(${c.id})" style="background:#c0392b;">Delete</button></td></tr>`;
+            html += `<tr><td>${escapeHtml(c.title)}</td><td>${c.role}</td><td>${c.pass_score}</td><td>${c.expiry_days}</td><td><button onclick="editSafetyCourse(${c.id})">Edit</button> <button onclick="deleteSafetyCourse(${c.id})" style="background:#c0392b;">Delete</button></td></tr>`;
         });
         html += '</tbody></table>';
     }
@@ -764,7 +793,8 @@ function renderActiveProjects() {
         <div class="project-card">
             <div class="project-name">${escapeHtml(proj.name)}</div>
             <div class="project-meta">📍 ${escapeHtml(proj.location || '')}<br>👤 ${escapeHtml(proj.clientName || '')}</div>
-            <div>💰 Agreed: ${formatKES(proj.agreedCost)}</div>
+            <div>💰 Agreed: ${formatStars()}</div>
+            <div class="profit-badge">💰 Balance: ${formatStars()}</div>
             <span class="status-badge status-active"><i class="fas fa-play"></i> Active</span>
             <div class="card-buttons">
                 <button class="open-btn" onclick="openProjectModal('${proj.id}')"><i class="fas fa-eye"></i> OPEN SITE</button>
@@ -785,7 +815,8 @@ function renderCompletedProjects() {
         <div class="project-card ${proj.status === 'terminated' ? 'terminated-card' : 'completed-card'}">
             <div class="project-name">${escapeHtml(proj.name)}</div>
             <div class="project-meta">📍 ${escapeHtml(proj.location || '')}<br>👤 ${escapeHtml(proj.clientName || '')}</div>
-            <div>💰 Agreed: ${formatKES(proj.agreedCost)}</div>
+            <div>💰 Agreed: ${formatStars()}</div>
+            <div class="profit-badge">💰 Final Balance: ${formatStars()}</div>
             <span class="status-badge ${proj.status === 'completed' ? 'status-completed' : 'status-terminated'}">${proj.status === 'completed' ? 'Completed' : 'Terminated'}</span>
             <div class="archived-buttons">
                 <button class="view-btn" onclick="openProjectModal('${proj.id}')"><i class="fas fa-eye"></i> View Details</button>
@@ -823,7 +854,9 @@ function renderOverview() {
                 const profit = netInc - exp;
                 const paid = p.manualTotalPaid || 0;
                 const balance = (p.agreedCost || 0) - paid;
-                return `<tr><td>${escapeHtml(p.name)}</td><td>${p.status}</td><td>${formatKES(gross)}</td><td>${formatKES(tax)}</td><td>${formatKES(netInc)}</td><td>${formatKES(exp)}</td><td class="${profit>=0?'balance-positive':'balance-warning'}">${formatKES(profit)}</td><td class="${balance>0?'balance-warning':'balance-positive'}">${formatKES(balance)}</td></tr>`;
+                return `<tr><td>${escapeHtml(p.name)}</td><td>${p.status}</td><td>${formatKES(gross)}</td><td>${formatKES(tax)}</td><td>${formatKES(netInc)}</td><td>${formatKES(exp)}</td>
+                <td class="${profit>=0?'balance-positive':'balance-warning'}">${formatKES(profit)}</td>
+                <td class="${balance>0?'balance-warning':'balance-positive'}">${formatKES(balance)}</td></tr>`;
             }).join('')}
             </tbody></table></div>
         `;
@@ -1353,7 +1386,13 @@ async function loadUsersList() {
             const siteNames = u.assignedSiteIds.map(sid => projects.find(p => p.id === sid)?.name || 'Deleted').join(', ');
             assignedText = siteNames;
         }
-        container.innerHTML += `<tr><td>${escapeHtml(u.fullName)}</td><td>${escapeHtml(u.username)}</td><td><span class="role-badge ${u.role === 'admin' ? 'role-admin-badge' : 'role-foreman-badge'}">${u.role}</span></td><td>${assignedText} ${u.role === 'foreman' ? `<button class="edit-foreman-btn" onclick="editForemanSites('${u.id}')">Edit Sites</button>` : ''}</td><td>${u.id !== currentUser.id ? `<span class="danger-text" onclick="deleteUser('${u.id}')">Delete</span>` : '<span class="warning-text">You</span>'}</td></tr>`;
+        container.innerHTML += `<tr>
+            <td>${escapeHtml(u.fullName)}</td
+            <td>${escapeHtml(u.username)}</td
+            <td><span class="role-badge ${u.role === 'admin' ? 'role-admin-badge' : 'role-foreman-badge'}">${u.role}</span></td>
+            <td>${assignedText} ${u.role === 'foreman' ? `<button class="edit-foreman-btn" onclick="editForemanSites('${u.id}')">Edit Sites</button>` : ''}</td>
+            <td>${u.id !== currentUser.id ? `<span class="danger-text" onclick="deleteUser('${u.id}')">Delete</span>` : '<span class="warning-text">You</span>'}</td>
+        </tr>`;
     }
     container.innerHTML += '</tbody></table>';
 }
@@ -1405,7 +1444,15 @@ async function loadPendingRequests() {
     pendingAdminRequests = data.requests || [];
     const container = document.getElementById('pendingRequestsList');
     if (pendingAdminRequests.length === 0) { container.innerHTML = '<p>No pending requests</p>'; return; }
-    container.innerHTML = pendingAdminRequests.map((req, idx) => `<div class="pending-request-item"><strong>${escapeHtml(req.fullName)}</strong> (@${escapeHtml(req.username)})<br>Requested: ${new Date(req.timestamp * 1000).toLocaleString()}<br>Expires: ${new Date(req.expiresAt * 1000).toLocaleString()}<br><button class="approve-btn" onclick="approveAdminRequest('${req.id}')">Approve</button><button class="reject-btn" onclick="rejectAdminRequest('${req.id}')">Reject</button></div>`).join('');
+    container.innerHTML = pendingAdminRequests.map((req, idx) => `
+        <div class="pending-request-item">
+            <strong>${escapeHtml(req.fullName)}</strong> (@${escapeHtml(req.username)})<br>
+            Requested: ${new Date(req.timestamp * 1000).toLocaleString()}<br>
+            Expires: ${new Date(req.expiresAt * 1000).toLocaleString()}<br>
+            <button class="approve-btn" onclick="approveAdminRequest('${req.id}')">Approve</button>
+            <button class="reject-btn" onclick="rejectAdminRequest('${req.id}')">Reject</button>
+        </div>
+    `).join('');
 }
 async function approveAdminRequest(requestId) { const res = await fetch(`/api/pending_requests/${requestId}/approve`, { method: 'POST' }); if (res.ok) { await loadPendingRequests(); await loadUsersList(); alert('Admin approved'); } else { alert('Error approving'); } }
 async function rejectAdminRequest(requestId) { const res = await fetch(`/api/pending_requests/${requestId}/reject`, { method: 'DELETE' }); if (res.ok) { await loadPendingRequests(); alert('Request rejected'); } else { alert('Error rejecting'); } }
