@@ -17,6 +17,7 @@
         .company-text { display: flex; flex-direction: column; }
         .company-text h1 { font-size: 1.3rem; font-weight: 600; letter-spacing: -0.3px; margin: 0; line-height: 1.3; }
         .company-text p { font-size: 0.7rem; opacity: 0.85; margin-top: 2px; }
+        .company-contact { font-size: 0.7rem; margin-top: 5px; opacity: 0.8; }
         .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
         .company-settings, .logout-btn, .user-mgmt-btn { background: #1f4e6e; padding: 6px 12px; border-radius: 40px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; border: none; color: white; }
         .company-settings:hover, .logout-btn:hover, .user-mgmt-btn:hover { background: #2c6e8f; }
@@ -29,7 +30,7 @@
         .dropdown { position: relative; display: inline-block; }
         .dropdown-btn { background: transparent; border: none; padding: 14px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; color: #2c5a74; border-radius: 30px 30px 0 0; transition: all 0.2s; font-family: inherit; }
         .dropdown-btn:hover { background: rgba(31, 110, 108, 0.1); }
-        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 220px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 10; border-radius: 12px; overflow: hidden; top: 100%; left: 0; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 220px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100000; border-radius: 12px; overflow: hidden; top: 100%; left: 0; }
         .dropdown-content button { color: #2c5a74; padding: 12px 16px; text-decoration: none; display: block; width: 100%; text-align: left; background: white; border: none; border-radius: 0; font-weight: 500; cursor: pointer; }
         .dropdown-content button:hover { background-color: #eef2f7; color: #0f4c5f; }
         .dropdown:hover .dropdown-content { display: block; }
@@ -71,7 +72,7 @@
         table { width: 100%; border-collapse: collapse; margin: 18px 0; background: white; border-radius: 20px; overflow-x: auto; display: block; }
         th, td { border: 1px solid #dde4ec; padding: 10px 8px; text-align: left; font-size: 0.85rem; }
         th { background: #eef3fa; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 10000; overflow: auto; padding: 30px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 100000; overflow: auto; padding: 30px; }
         .modal-content { max-width: 1300px; margin: 20px auto; background: white; border-radius: 32px; padding: 24px; position: relative; }
         .modal-small { max-width: 450px; }
         .modal-medium { max-width: 800px; }
@@ -80,7 +81,10 @@
         .subtab-content { margin-top: 20px; }
         .client-detail { background: #e9f3f0; padding: 12px; border-radius: 20px; margin-bottom: 15px; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .company-footer { text-align: center; padding: 15px; border-top: 1px solid #e0e8f0; font-size: 0.75rem; color: #6c8a9c; background: #fafcfd; }
+        .company-footer { text-align: center; padding: 15px; border-top: 1px solid #e0e8f0; font-size: 0.8rem; color: #6c8a9c; background: #fafcfd; }
+        .footer-line { margin: 4px 0; }
+        .footer-line a { color: #1f6e6c; text-decoration: none; }
+        .footer-line a:hover { text-decoration: underline; }
         .summary-cards { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
         .stat-card { background: #f0f6fa; padding: 16px 22px; border-radius: 28px; flex: 1; min-width: 170px; cursor: pointer; transition: 0.2s; }
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
@@ -113,7 +117,7 @@
         .pending-request-item { background: #fff8e1; border-left: 4px solid #f39c12; padding: 10px; margin: 10px 0; border-radius: 8px; }
         .approve-btn { background: #27ae60; font-size: 0.7rem; padding: 4px 10px; margin: 0 2px; border: none; color: white; border-radius: 20px; cursor: pointer; }
         .reject-btn { background: #e74c3c; font-size: 0.7rem; padding: 4px 10px; margin: 0 2px; border: none; color: white; border-radius: 20px; cursor: pointer; }
-        @media (max-width: 700px) { .panel { padding: 16px; } .card-buttons { flex-direction: column; } .company-text h1 { font-size: 1rem; } }
+        @media (max-width: 700px) { .panel { padding: 16px; } .card-buttons { flex-direction: column; } .company-text h1 { font-size: 1rem; } .footer-line { font-size: 0.7rem; } }
     </style>
 </head>
 <body>
@@ -126,8 +130,9 @@
                 <div id="companyLogoPlaceholder" class="company-logo-placeholder"><i class="fas fa-building"></i></div>
             </div>
             <div class="company-text">
-                <h1 id="companyNameDisplay"><span id="companyNameSpan">Your Company</span></h1>
+                <h1 id="companyNameSpan">Your Company</h1>
                 <p id="companyDetailsDisplay">Construction & Electrical · KES Currency</p>
+                <div id="companyContactInfo" class="company-contact"></div>
             </div>
         </div>
         <div class="header-right">
@@ -165,11 +170,22 @@
     <div id="recommendationPanel" class="panel"><h2><i class="fas fa-file-alt"></i> Generate Recommendation Letter (Admin Only)</h2><div style="background:#e8f5e9; padding:20px; border-radius:20px; margin-top:15px;"><div class="form-group"><label>Select Person Type</label><select id="recPersonType" onchange="toggleRecPersonFields()"><option value="worker">Worker/Employee</option><option value="intern">Intern/Attachee</option></select></div><div id="recWorkerDiv" class="form-group"><label>Select Worker/Employee</label><select id="recWorkerSelect" style="width:100%; padding:10px;"></select></div><div id="recInternDiv" class="form-group" style="display:none;"><label>Intern/Attachee Full Name</label><input type="text" id="recInternName" placeholder="Enter intern's full name"></div><div class="form-group"><label>Join Date (Start Date)</label><input type="date" id="recJoinDate"></div><div class="form-group"><label>Leave Date (End Date)</label><input type="date" id="recLeaveDate"></div><div class="form-group"><label>Job Title</label><input type="text" id="recJobTitle" placeholder="e.g., Electrician, Technician, etc."></div><div class="form-group"><label>Work Type / Specialization</label><input type="text" id="recWorkType" placeholder="e.g., piping, mounting, cabling, etc."></div><div class="form-group"><label>Recommendation Summary / Performance Notes</label><textarea id="recSummary" rows="3" placeholder="Enter recommendation summary or click 'Auto-fill from Worker Record'"></textarea><button id="autoFillRecBtn" style="margin-top:5px; background:#3498db"><i class="fas fa-magic"></i> Auto-fill from Worker Record</button></div><div class="form-group"><label>Select Site (where they worked)</label><select id="recSiteSelect" style="width:100%; padding:10px;"></select></div><button id="generateRecBtn" style="background:#8e44ad; width:100%; margin-top:15px;"><i class="fas fa-file-pdf"></i> Generate Recommendation Letter PDF</button></div></div>
     <div id="jobBoardPanel" class="panel"><h2><i class="fas fa-briefcase"></i> Job Board</h2><div id="jobBoardContainer"></div><div id="adminJobControls" style="display:none; margin-top:20px;"><hr><h3>Post New Job (Admin only)</h3><div class="form-row"><div class="form-group"><input type="text" id="jobTitle" placeholder="Job Title"></div><div class="form-group"><input type="text" id="jobLocation" placeholder="Location"></div></div><div class="form-row"><div class="form-group"><textarea id="jobDescription" rows="3" placeholder="Job Description"></textarea></div></div><div class="form-row"><div class="form-group"><input type="text" id="jobContact" placeholder="Contact info (email/phone)"></div></div><button onclick="postJob()"><i class="fas fa-plus"></i> Post Job</button></div></div>
     <div id="suggestionsPanel" class="panel"><h2><i class="fas fa-comment"></i> Suggestions / Feedback</h2><div id="suggestionsContainer"></div><hr><h3>Submit a Suggestion</h3><div class="form-row"><div class="form-group"><input type="text" id="suggestionName" placeholder="Your Name (optional)"></div></div><div class="form-row"><div class="form-group"><textarea id="suggestionText" rows="3" placeholder="Your suggestion..."></textarea></div></div><button onclick="submitSuggestion()"><i class="fas fa-paper-plane"></i> Submit Suggestion</button></div></div>
-    <div class="company-footer" id="companyFooter"><span id="footerText">Company Name | Address | P.O. Box | Tel: | Email:</span></div>
+    
+    <!-- FOOTER – only copyright, email, developer, and terms/privacy -->
+    <div class="company-footer">
+        <div class="footer-line">
+            © 2026 Safari Softwares. All rights reserved. &nbsp;&nbsp;&nbsp; Email: <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a>
+        </div>
+        <div class="footer-line">
+            Developer: Safari Softwares &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; 
+            <a href="#" onclick="openTermsModal(); return false;">Terms of Service</a> &nbsp;|&nbsp;
+            <a href="#" onclick="openPrivacyModal(); return false;">Privacy Policy</a>
+        </div>
+    </div>
 </div></div>
 
 <!-- Password Prompt Modal -->
-<div id="passwordPromptModal" class="modal" style="z-index: 30000;">
+<div id="passwordPromptModal" class="modal" style="z-index: 100000;">
     <div class="modal-content password-prompt-modal">
         <div class="flex-between"><h2><i class="fas fa-lock"></i> Verify Admin Password</h2><button onclick="closePasswordPrompt()" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div>
         <div style="margin-top:20px;"><p>For security, please enter your password to access the Delete Sites section.</p></div>
@@ -180,7 +196,7 @@
 </div>
 
 <!-- Login Modal -->
-<div id="loginModal" class="modal" style="display:flex; align-items:center; justify-content:center; z-index: 20000;">
+<div id="loginModal" class="modal" style="display:flex; align-items:center; justify-content:center; z-index: 100000;">
     <div class="modal-content" style="max-width: 900px;">
         <div style="text-align:center"><h2><i class="fas fa-lock"></i> Company ERP Login</h2><div style="margin:20px 0;"><button onclick="showLoginTab('login')" id="loginTabBtn" style="background:#1f6e6c; margin-right:10px">Login</button><button onclick="showLoginTab('signup')" id="signupTabBtn" style="background:#6c8a9c">Sign Up</button><button onclick="showLoginTab('forgot')" id="forgotTabBtn" style="background:#e67e22; margin-left:10px">Forgot Password</button><button onclick="showLoginTab('jobs')" id="jobsTabBtn" style="background:#2c8c6e; margin-left:10px"><i class="fas fa-briefcase"></i> Jobs</button></div>
             <div id="loginPanel"><div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="Enter username"></div><div class="form-group"><label>Password</label><div class="password-wrapper"><input type="password" id="loginPassword" placeholder="Enter password"><button type="button" class="toggle-password" onclick="togglePassword('loginPassword')"><i class="fas fa-eye"></i></button></div></div><div id="loginError" style="color:#e74c3c; font-size:0.8rem; display:none"></div><button onclick="attemptLogin()" style="width:100%"><i class="fas fa-sign-in-alt"></i> Login</button></div>
@@ -243,6 +259,86 @@
 <div id="subtabInvoiceHistory" class="subtab-content" style="display:none"><h3><i class="fas fa-history"></i> Invoice History</h3><div id="invoiceHistoryContainer" style="max-height:300px; overflow-y:auto;"></div></div>
 </div></div>
 
+<!-- Terms of Service Modal -->
+<div id="termsModal" class="modal">
+    <div class="modal-content modal-medium" style="max-width: 700px;">
+        <div class="flex-between">
+            <h2><i class="fas fa-file-contract"></i> Terms of Service</h2>
+            <button onclick="closeModalById('termsModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button>
+        </div>
+        <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+            <h3>1. Acceptance of Terms</h3>
+            <p>By using this ERP system (“Software”), you agree to be bound by these Terms of Service. If you do not agree, do not use the Software.</p>
+            <h3>2. Description of Service</h3>
+            <p>Safari Softwares provides a construction management ERP system including project tracking, worker management, invoicing, training modules, and related tools (“Service”).</p>
+            <h3>3. User Accounts</h3>
+            <p>You are responsible for maintaining the confidentiality of your login credentials. Safari Softwares is not liable for any unauthorized access resulting from your failure to secure your account.</p>
+            <h3>4. Acceptable Use</h3>
+            <p>You agree not to: (a) use the Service for any illegal purpose; (b) attempt to gain unauthorized access to any part of the Service; (c) upload malicious code; (d) interfere with the operation of the Service.</p>
+            <h3>5. Data Ownership & Privacy</h3>
+            <p>You retain all ownership of data you enter. Safari Softwares processes your data only to provide the Service. See our Privacy Policy for details.</p>
+            <h3>6. Subscription & Payments</h3>
+            <p>Certain features may require a paid subscription. Fees are non‑refundable unless otherwise stated. Safari Softwares may change fees with 30 days’ notice.</p>
+            <h3>7. Termination</h3>
+            <p>Either party may terminate this agreement at any time. Safari Softwares may suspend or terminate access immediately for violation of these Terms.</p>
+            <h3>8. Disclaimer of Warranties</h3>
+            <p>The Service is provided “as is” without warranties of merchantability, fitness for a particular purpose, or non‑infringement. Safari Softwares does not warrant that the Service will be uninterrupted or error‑free.</p>
+            <h3>9. Limitation of Liability</h3>
+            <p>To the maximum extent permitted by law, Safari Softwares shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the Service.</p>
+            <h3>10. Indemnification</h3>
+            <p>You agree to indemnify and hold harmless Safari Softwares from any claims, damages, or expenses arising from your violation of these Terms or applicable laws.</p>
+            <h3>11. Governing Law</h3>
+            <p>These Terms shall be governed by the laws of the Republic of Kenya. Any disputes shall be resolved exclusively in the courts of Nairobi, Kenya.</p>
+            <h3>12. Changes to Terms</h3>
+            <p>Safari Softwares may modify these Terms at any time. Continued use of the Service after changes constitutes acceptance.</p>
+            <h3>13. Entire Agreement</h3>
+            <p>These Terms constitute the entire agreement between you and Safari Softwares regarding the Service.</p>
+            <h3>14. Contact</h3>
+            <p>Questions? Email us at <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a>.</p>
+            <p style="margin-top: 20px;"><em>Last updated: May 24, 2026</em></p>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div id="privacyModal" class="modal">
+    <div class="modal-content modal-medium" style="max-width: 700px;">
+        <div class="flex-between">
+            <h2><i class="fas fa-lock"></i> Privacy Policy</h2>
+            <button onclick="closeModalById('privacyModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button>
+        </div>
+        <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+            <h3>1. Information We Collect</h3>
+            <p>We collect personal information you provide directly, such as name, email address, username, phone number, company name, and project/worker details. We also automatically collect usage data (IP address, browser type, pages visited) to improve our Service.</p>
+            <h3>2. How We Use Your Information</h3>
+            <p>We use your information to: (a) provide, maintain, and improve the Service; (b) process transactions; (c) send administrative messages; (d) comply with legal obligations; (e) enforce our Terms of Service.</p>
+            <h3>3. Data Sharing & Disclosure</h3>
+            <p>We do not sell your personal data. We may share data: (a) with your consent; (b) to comply with laws or legal requests; (c) with service providers who help us operate the Service (e.g., hosting, email, analytics); (d) in connection with a merger, acquisition, or bankruptcy.</p>
+            <h3>4. Data Security</h3>
+            <p>We implement reasonable security measures such as encryption (AES-256 for stored data, TLS for transmission), access controls, firewalls, and regular backups. However, no system is 100% secure. You use the Service at your own risk.</p>
+            <h3>5. Data Retention</h3>
+            <p>We retain your data as long as your account is active or as needed to provide the Service. You may request deletion by contacting us. Some data may be retained to comply with legal obligations.</p>
+            <h3>6. Cookies & Tracking</h3>
+            <p>We use essential session cookies to keep you logged in. You may disable cookies in your browser, but some features may not work. We do not use third‑party tracking cookies.</p>
+            <h3>7. Your Rights</h3>
+            <p>Depending on your jurisdiction, you may have the right to access, correct, delete, or port your personal data, or object to processing. Contact us to exercise these rights. We will respond within 30 days.</p>
+            <h3>8. International Transfers</h3>
+            <p>Your data may be transferred to and processed in countries other than your own. We ensure appropriate safeguards (e.g., Standard Contractual Clauses) are in place.</p>
+            <h3>9. Children’s Privacy</h3>
+            <p>The Service is not intended for children under 16. We do not knowingly collect information from children. If we become aware of such data, we will delete it.</p>
+            <h3>10. Third‑Party Links</h3>
+            <p>The Service may contain links to third‑party websites (e.g., training videos). We are not responsible for their privacy practices.</p>
+            <h3>11. Changes to This Privacy Policy</h3>
+            <p>We may update this policy from time to time. The “Last updated” date will change. Continued use constitutes acceptance.</p>
+            <h3>12. Data Breach Notification</h3>
+            <p>In the event of a data breach, we will notify affected users within 72 hours as required by applicable law.</p>
+            <h3>13. Contact Us</h3>
+            <p>If you have any questions about this Privacy Policy, or to exercise your data rights, please contact us at <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a> or write to: Safari Softwares, Nairobi, Kenya.</p>
+            <p style="margin-top: 20px;"><em>Last updated: May 24, 2026</em></p>
+        </div>
+    </div>
+</div>
+
 <script>
 // ==================== GLOBALS ====================
 let currentUser = null;
@@ -255,6 +351,7 @@ let wallpaperData = null;
 let currentEditWorkerIndex = null;
 let currentEditProjectId = null;
 let pendingAdminRequests = [];
+let modalZCounter = 100000;
 
 // ==================== UTILITIES ====================
 function escapeHtml(str) {
@@ -284,6 +381,36 @@ function togglePassword(inputId) {
         input.type = 'password';
         btn.innerHTML = '<i class="fas fa-eye"></i>';
     }
+}
+
+function openTermsModal() {
+    document.getElementById('termsModal').style.display = 'block';
+    bringToFront(document.getElementById('termsModal'));
+}
+function openPrivacyModal() {
+    document.getElementById('privacyModal').style.display = 'block';
+    bringToFront(document.getElementById('privacyModal'));
+}
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+}
+function bringToFront(modalElement) {
+    if (!modalElement) return;
+    modalZCounter += 10;
+    modalElement.style.zIndex = modalZCounter;
+}
+function openModalAndBringToFront(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+        bringToFront(modal);
+    }
+}
+function closeModalById(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'none';
 }
 
 // ==================== LOGIN / SESSION ====================
@@ -336,6 +463,7 @@ async function logout() {
     currentUser = null;
     document.getElementById('mainApp').style.display = 'none';
     document.getElementById('loginModal').style.display = 'flex';
+    bringToFront(document.getElementById('loginModal'));
     showLoginTab('login');
 }
 
@@ -456,9 +584,9 @@ function renderOverview() {
                 const profit = netInc - exp;
                 const paid = p.manualTotalPaid || 0;
                 const balance = (p.agreedCost || 0) - paid;
-                return `<tr><td>${escapeHtml(p.name)}</td><td>${p.status}</td><td>${formatKES(gross)}</td><td>${formatKES(tax)}</td><td>${formatKES(netInc)}</td><td>${formatKES(exp)}</td><td class="${profit>=0?'balance-positive':'balance-warning'}">${formatKES(profit)}</td><td class="${balance>0?'balance-warning':'balance-positive'}">${formatKES(balance)}</td></tr>`;
+                return `<tr><td>${escapeHtml(p.name)}</td><td class="${profit>=0?'balance-positive':'balance-warning'}">${formatKES(profit)}</td><td class="${balance>0?'balance-warning':'balance-positive'}">${formatKES(balance)}</td></tr>`;
             }).join('')}
-            </tbody>} }}</div>
+            </tbody>}</div>
         `;
     } else {
         container.innerHTML = '<div class="restricted-access"><i class="fas fa-lock"></i><h3>Restricted Access</h3><p>Financial info only for Administrators.</p></div>';
@@ -621,44 +749,17 @@ function refreshModalData(proj) {
     document.getElementById('siteNotesListContainer').innerHTML = notes.map((note, idx) => `<div class="note-item"><div><strong>📅 ${escapeHtml(note.date)}</strong><br/>${escapeHtml(note.text)}</div><div><button onclick="printNote(${idx})">Print PDF</button></div></div>`).join('');
 }
 
-async function removeExpense(idx) {
-    const proj = projects.find(p => p.id === currentProjectId);
-    proj.expenses.splice(idx, 1);
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-}
-async function removeIncome(idx) {
-    const proj = projects.find(p => p.id === currentProjectId);
-    proj.incomes.splice(idx, 1);
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-}
-async function removeMaterial(idx) {
-    const proj = projects.find(p => p.id === currentProjectId);
-    proj.materials.splice(idx, 1);
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-}
-async function removeWorker(idx) {
-    const proj = projects.find(p => p.id === currentProjectId);
-    proj.workers.splice(idx, 1);
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-}
+async function removeExpense(idx) { const proj = projects.find(p => p.id === currentProjectId); proj.expenses.splice(idx, 1); await updateProject(proj); await loadProjects(); refreshModalData(proj); }
+async function removeIncome(idx) { const proj = projects.find(p => p.id === currentProjectId); proj.incomes.splice(idx, 1); await updateProject(proj); await loadProjects(); refreshModalData(proj); }
+async function removeMaterial(idx) { const proj = projects.find(p => p.id === currentProjectId); proj.materials.splice(idx, 1); await updateProject(proj); await loadProjects(); refreshModalData(proj); }
+async function removeWorker(idx) { const proj = projects.find(p => p.id === currentProjectId); proj.workers.splice(idx, 1); await updateProject(proj); await loadProjects(); refreshModalData(proj); }
 async function addMaterial() {
     if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') return;
     const desc = document.getElementById('matDesc').value;
     const qty = parseFloat(document.getElementById('matQty').value);
     const area = document.getElementById('matArea').value;
     const cost = parseFloat(document.getElementById('matCost').value);
-    if (!desc || isNaN(qty) || isNaN(cost) || qty <= 0 || cost <= 0) {
-        alert('Please fill all fields');
-        return;
-    }
+    if (!desc || isNaN(qty) || isNaN(cost) || qty <= 0 || cost <= 0) { alert('Please fill all fields'); return; }
     const proj = projects.find(p => p.id === currentProjectId);
     if (!proj.materials) proj.materials = [];
     proj.materials.push({ desc, qty, area, cost });
@@ -672,10 +773,7 @@ async function addMaterial() {
     alert('Material added');
 }
 async function addWorker() {
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin' && currentUser.role !== 'foreman') {
-        alert('Only admin or foreman can add workers');
-        return;
-    }
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin' && currentUser.role !== 'foreman') { alert('Only admin or foreman can add workers'); return; }
     const name = document.getElementById('workerName').value;
     const idNumber = document.getElementById('workerIdNumber').value;
     const phone = document.getElementById('workerPhone').value;
@@ -805,10 +903,7 @@ function printWorkerDetail() {
     html2pdf().from(printDiv).set({ margin: 0, filename: `Worker_${w.name.replace(/\s/g, '_')}.pdf` }).save().then(() => document.body.removeChild(printDiv));
 }
 function editWorker(projId, workerIdx) {
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
-        alert('Only administrators can edit workers');
-        return;
-    }
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can edit workers'); return; }
     const proj = projects.find(p => p.id === projId);
     const w = proj.workers[workerIdx];
     currentEditWorkerIndex = workerIdx;
@@ -855,10 +950,7 @@ async function saveEditedWorker() {
 }
 // ==================== INVOICES ====================
 function openInvoiceModal(projectId) {
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
-        alert('Only administrators can generate invoices');
-        return;
-    }
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can generate invoices'); return; }
     const proj = projects.find(p => p.id === projectId);
     if (!proj) return;
     invoiceProjectId = projectId;
@@ -874,9 +966,7 @@ function openInvoiceModal(projectId) {
     updateTaxCalculation();
     openModalAndBringToFront('invoiceModal');
 }
-function openInvoiceModalFromModal() {
-    if (currentProjectId) openInvoiceModal(currentProjectId);
-}
+function openInvoiceModalFromModal() { if (currentProjectId) openInvoiceModal(currentProjectId); }
 function updateTaxCalculation() {
     const amount = parseFloat(document.getElementById('invoiceAmount').value) || 0;
     const taxRate = parseFloat(document.getElementById('invoiceTaxRate').value) || 0;
@@ -930,10 +1020,7 @@ function refreshInvoiceHistoryDisplay(proj) {
     const container = document.getElementById('invoiceHistoryContainer');
     if (!container) return;
     const invoices = proj.invoiceHistory || [];
-    if (invoices.length === 0) {
-        container.innerHTML = '<p>No invoices yet.</p>';
-        return;
-    }
+    if (invoices.length === 0) { container.innerHTML = '<p>No invoices yet.</p>'; return; }
     container.innerHTML = invoices.map(inv => `<div><strong>${inv.number}</strong> - ${inv.date}<br>Amount: ${formatKES(inv.amount)} | Tax: ${inv.taxRate}% | Net: ${formatKES(inv.afterTax)}<br>${escapeHtml(inv.description)}<br>Due: ${inv.dueDate}</div><hr>`).join('');
 }
 // ==================== COMPANY SETTINGS ====================
@@ -942,7 +1029,11 @@ async function loadCompanySettings() {
     const data = await response.json();
     document.getElementById('companyNameSpan').innerText = data.name || 'Your Company';
     document.getElementById('companyDetailsDisplay').innerHTML = data.tagline || 'Construction & Electrical';
-    document.getElementById('footerText').innerHTML = `${data.name || 'Your Company'} | ${data.address || ''} | ${data.poBox || ''} | Tel: ${data.phone || ''} | Email: ${data.email || ''}`;
+    // Update the contact info line (without company name)
+    const contactDiv = document.getElementById('companyContactInfo');
+    if (contactDiv) {
+        contactDiv.innerHTML = `${data.address || ''} | ${data.poBox || ''} | Tel: ${data.phone || ''} | Email: ${data.email || ''}`;
+    }
     if (data.logoData) {
         document.getElementById('companyLogoImg').src = data.logoData;
         document.getElementById('companyLogoImg').style.display = 'block';
@@ -959,10 +1050,7 @@ async function loadCompanySettings() {
     }
 }
 function openCompanySettings() {
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
-        alert('Only administrators can access settings');
-        return;
-    }
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can access settings'); return; }
     fetch('/api/company_settings').then(r => r.json()).then(data => {
         document.getElementById('settingsCompanyName').value = data.name || '';
         document.getElementById('settingsTagline').value = data.tagline || '';
@@ -1054,10 +1142,7 @@ function removeSettingsWallpaper() {
 }
 // ==================== USER MANAGEMENT ====================
 async function openUserManagement() {
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
-        alert('Only administrators can access user management');
-        return;
-    }
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can access user management'); return; }
     await loadUsersList();
     await loadPendingRequests();
     document.getElementById('sysAdminSection').style.display = currentUser.role === 'system_admin' ? 'block' : 'none';
@@ -1083,12 +1168,7 @@ async function loadUsersList() {
 async function deleteUser(userId) {
     if (!confirm('Delete this user?')) return;
     const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
-    if (response.ok) {
-        await loadUsersList();
-        alert('User deleted');
-    } else {
-        alert('Error deleting user');
-    }
+    if (response.ok) { await loadUsersList(); alert('User deleted'); } else { alert('Error deleting user'); }
 }
 async function editForemanSites(userId) {
     const user = (await (await fetch('/api/users')).json()).users.find(u => u.id === userId);
@@ -1110,24 +1190,14 @@ async function saveForemanSites() {
         alert('Foreman sites updated');
         closeModalById('editForemanSitesModal');
         await loadUsersList();
-    } else {
-        alert('Error updating sites');
-    }
+    } else { alert('Error updating sites'); }
 }
 async function changePassword() {
     const currentPwd = document.getElementById('changeCurrentPwd').value;
     const newPwd = document.getElementById('changeNewPwd').value;
     const confirmPwd = document.getElementById('changeConfirmPwd').value;
-    if (newPwd !== confirmPwd) {
-        document.getElementById('pwdChangeMsg').innerText = 'New passwords do not match';
-        document.getElementById('pwdChangeMsg').style.display = 'block';
-        return;
-    }
-    if (newPwd.length < 4) {
-        document.getElementById('pwdChangeMsg').innerText = 'Password must be at least 4 characters';
-        document.getElementById('pwdChangeMsg').style.display = 'block';
-        return;
-    }
+    if (newPwd !== confirmPwd) { document.getElementById('pwdChangeMsg').innerText = 'New passwords do not match'; document.getElementById('pwdChangeMsg').style.display = 'block'; return; }
+    if (newPwd.length < 4) { document.getElementById('pwdChangeMsg').innerText = 'Password must be at least 4 characters'; document.getElementById('pwdChangeMsg').style.display = 'block'; return; }
     const response = await fetch('/api/change_password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1150,11 +1220,7 @@ async function updateAdminCredentials() {
     const username = document.getElementById('adminUsername').value.trim();
     const newPassword = document.getElementById('adminNewPassword').value;
     const confirm = document.getElementById('adminConfirmPassword').value;
-    if (newPassword && newPassword !== confirm) {
-        document.getElementById('adminUpdateMsg').innerText = 'Passwords do not match';
-        document.getElementById('adminUpdateMsg').style.display = 'block';
-        return;
-    }
+    if (newPassword && newPassword !== confirm) { document.getElementById('adminUpdateMsg').innerText = 'Passwords do not match'; document.getElementById('adminUpdateMsg').style.display = 'block'; return; }
     const response = await fetch('/api/update_admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1166,9 +1232,7 @@ async function updateAdminCredentials() {
         document.getElementById('adminUpdateMsg').style.display = 'block';
         setTimeout(() => document.getElementById('adminUpdateMsg').style.display = 'none', 3000);
         if (username) currentUser.username = username;
-    } else {
-        alert('Error updating admin');
-    }
+    } else { alert('Error updating admin'); }
 }
 // ==================== PENDING ADMIN REQUESTS ====================
 async function loadPendingRequests() {
@@ -1177,10 +1241,7 @@ async function loadPendingRequests() {
     const data = await response.json();
     pendingAdminRequests = data.requests || [];
     const container = document.getElementById('pendingRequestsList');
-    if (pendingAdminRequests.length === 0) {
-        container.innerHTML = '<p>No pending requests</p>';
-        return;
-    }
+    if (pendingAdminRequests.length === 0) { container.innerHTML = '<p>No pending requests</p>'; return; }
     container.innerHTML = pendingAdminRequests.map((req, idx) => `
         <div class="pending-request-item">
             <strong>${escapeHtml(req.fullName)}</strong> (@${escapeHtml(req.username)})<br>
@@ -1193,36 +1254,18 @@ async function loadPendingRequests() {
 }
 async function approveAdminRequest(requestId) {
     const response = await fetch(`/api/pending_requests/${requestId}/approve`, { method: 'POST' });
-    if (response.ok) {
-        await loadPendingRequests();
-        await loadUsersList();
-        alert('Admin approved');
-    } else {
-        alert('Error approving');
-    }
+    if (response.ok) { await loadPendingRequests(); await loadUsersList(); alert('Admin approved'); } else { alert('Error approving'); }
 }
 async function rejectAdminRequest(requestId) {
     const response = await fetch(`/api/pending_requests/${requestId}/reject`, { method: 'DELETE' });
-    if (response.ok) {
-        await loadPendingRequests();
-        alert('Request rejected');
-    } else {
-        alert('Error rejecting');
-    }
+    if (response.ok) { await loadPendingRequests(); alert('Request rejected'); } else { alert('Error rejecting'); }
 }
 // ==================== JOBS & SUGGESTIONS ====================
-async function loadJobs() {
-    const response = await fetch('/api/jobs');
-    const data = await response.json();
-    window.jobs = data.jobs || [];
-}
+async function loadJobs() { const response = await fetch('/api/jobs'); const data = await response.json(); window.jobs = data.jobs || []; }
 function renderJobBoard() {
     const container = document.getElementById('jobBoardContainer');
     if (!container) return;
-    if (!window.jobs || window.jobs.length === 0) {
-        container.innerHTML = '<p>No job postings</p>';
-        return;
-    }
+    if (!window.jobs || window.jobs.length === 0) { container.innerHTML = '<p>No job postings</p>'; return; }
     container.innerHTML = window.jobs.map((job, idx) => `
         <div class="job-card">
             <h3>${escapeHtml(job.title)}</h3>
@@ -1235,59 +1278,21 @@ function renderJobBoard() {
     `).join('');
 }
 async function postJob() {
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
-        alert('Only administrators can post jobs');
-        return;
-    }
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can post jobs'); return; }
     const title = document.getElementById('jobTitle').value.trim();
     const location = document.getElementById('jobLocation').value.trim();
     const description = document.getElementById('jobDescription').value.trim();
     const contact = document.getElementById('jobContact').value.trim();
-    if (!title || !description) {
-        alert('Title and description required');
-        return;
-    }
-    const response = await fetch('/api/jobs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, location, description, contact })
-    });
-    if (response.ok) {
-        await loadJobs();
-        renderJobBoard();
-        renderPublicJobBoard();
-        document.getElementById('jobTitle').value = '';
-        document.getElementById('jobLocation').value = '';
-        document.getElementById('jobDescription').value = '';
-        document.getElementById('jobContact').value = '';
-        alert('Job posted');
-    } else {
-        alert('Error posting job');
-    }
+    if (!title || !description) { alert('Title and description required'); return; }
+    const response = await fetch('/api/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, location, description, contact }) });
+    if (response.ok) { await loadJobs(); renderJobBoard(); renderPublicJobBoard(); document.getElementById('jobTitle').value = ''; document.getElementById('jobLocation').value = ''; document.getElementById('jobDescription').value = ''; document.getElementById('jobContact').value = ''; alert('Job posted'); } else { alert('Error posting job'); }
 }
-async function deleteJob(jobId) {
-    if (!confirm('Delete this job?')) return;
-    const response = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
-    if (response.ok) {
-        await loadJobs();
-        renderJobBoard();
-        renderPublicJobBoard();
-    } else {
-        alert('Error deleting job');
-    }
-}
-async function loadSuggestions() {
-    const response = await fetch('/api/suggestions');
-    const data = await response.json();
-    window.suggestions = data.suggestions || [];
-}
+async function deleteJob(jobId) { if (!confirm('Delete this job?')) return; const response = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' }); if (response.ok) { await loadJobs(); renderJobBoard(); renderPublicJobBoard(); } else { alert('Error deleting job'); } }
+async function loadSuggestions() { const response = await fetch('/api/suggestions'); const data = await response.json(); window.suggestions = data.suggestions || []; }
 function renderSuggestions() {
     const container = document.getElementById('suggestionsContainer');
     if (!container) return;
-    if (!window.suggestions || window.suggestions.length === 0) {
-        container.innerHTML = '<p>No suggestions yet</p>';
-        return;
-    }
+    if (!window.suggestions || window.suggestions.length === 0) { container.innerHTML = '<p>No suggestions yet</p>'; return; }
     container.innerHTML = window.suggestions.map((sug, idx) => `
         <div class="suggestion-card">
             <p><strong>${escapeHtml(sug.name || 'Anonymous')}</strong> - ${new Date(sug.date).toLocaleString()}</p>
@@ -1299,42 +1304,15 @@ function renderSuggestions() {
 async function submitSuggestion() {
     const name = document.getElementById('suggestionName').value.trim();
     const text = document.getElementById('suggestionText').value.trim();
-    if (!text) {
-        alert('Please enter a suggestion');
-        return;
-    }
-    const response = await fetch('/api/suggestions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name || 'Anonymous', text })
-    });
-    if (response.ok) {
-        await loadSuggestions();
-        renderSuggestions();
-        document.getElementById('suggestionName').value = '';
-        document.getElementById('suggestionText').value = '';
-        alert('Thank you for your suggestion');
-    } else {
-        alert('Error submitting suggestion');
-    }
+    if (!text) { alert('Please enter a suggestion'); return; }
+    const response = await fetch('/api/suggestions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name || 'Anonymous', text }) });
+    if (response.ok) { await loadSuggestions(); renderSuggestions(); document.getElementById('suggestionName').value = ''; document.getElementById('suggestionText').value = ''; alert('Thank you for your suggestion'); } else { alert('Error submitting suggestion'); }
 }
-async function deleteSuggestion(suggestionId) {
-    if (!confirm('Delete this suggestion?')) return;
-    const response = await fetch(`/api/suggestions/${suggestionId}`, { method: 'DELETE' });
-    if (response.ok) {
-        await loadSuggestions();
-        renderSuggestions();
-    } else {
-        alert('Error deleting suggestion');
-    }
-}
+async function deleteSuggestion(suggestionId) { if (!confirm('Delete this suggestion?')) return; const response = await fetch(`/api/suggestions/${suggestionId}`, { method: 'DELETE' }); if (response.ok) { await loadSuggestions(); renderSuggestions(); } else { alert('Error deleting suggestion'); } }
 function renderPublicJobBoard() {
     const container = document.getElementById('publicJobBoardList');
     if (!container) return;
-    if (!window.jobs || window.jobs.length === 0) {
-        container.innerHTML = '<p>No job openings at the moment</p>';
-        return;
-    }
+    if (!window.jobs || window.jobs.length === 0) { container.innerHTML = '<p>No job openings at the moment</p>'; return; }
     container.innerHTML = window.jobs.map(job => `
         <div class="public-job-card">
             <h3>${escapeHtml(job.title)}</h3>
@@ -1378,37 +1356,24 @@ function autoFillRecommendation() {
             document.getElementById('recWorkType').value = workType;
             const summary = `${nameWithApostrophe} role included but not limited to ${workType}. He demonstrated excellent skills, punctuality, and dedication. He also completed assigned tasks efficiently.`;
             document.getElementById('recSummary').value = summary;
-            if (!document.getElementById('recJoinDate').value && worker.date) {
-                document.getElementById('recJoinDate').value = worker.date;
-            }
+            if (!document.getElementById('recJoinDate').value && worker.date) { document.getElementById('recJoinDate').value = worker.date; }
             const today = new Date().toISOString().split('T')[0];
-            if (!document.getElementById('recLeaveDate').value) {
-                document.getElementById('recLeaveDate').value = today;
-            }
+            if (!document.getElementById('recLeaveDate').value) { document.getElementById('recLeaveDate').value = today; }
             alert('Auto-filled from worker record');
-        } else {
-            alert('Please select a worker first');
-        }
+        } else { alert('Please select a worker first'); }
     } else if (type === 'intern') {
         const internName = document.getElementById('recInternName').value;
         if (internName) {
             const nameWithApostrophe = internName.endsWith('s') ? `${internName}'` : `${internName}'s`;
             document.getElementById('recSummary').value = `${nameWithApostrophe} internship was completed with commendable performance. He showed great willingness to learn and teamwork.`;
             const today = new Date().toISOString().split('T')[0];
-            if (!document.getElementById('recLeaveDate').value) {
-                document.getElementById('recLeaveDate').value = today;
-            }
+            if (!document.getElementById('recLeaveDate').value) { document.getElementById('recLeaveDate').value = today; }
             alert('Auto-filled for intern');
-        } else {
-            alert('Please enter intern name');
-        }
+        } else { alert('Please enter intern name'); }
     }
 }
 async function generateRecommendationPDF() {
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
-        alert('Only administrators can generate recommendation letters');
-        return;
-    }
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can generate recommendation letters'); return; }
     const type = document.getElementById('recPersonType').value;
     let personName = '', idNumberDisplay = '';
     const siteId = document.getElementById('recSiteSelect').value;
@@ -1470,9 +1435,7 @@ async function exportData() {
 }
 function exportToCSV() {
     let csv = "ID,Name,Location,Client,Status,Agreed Cost\n";
-    projects.forEach(p => {
-        csv += `${p.id},${p.name},${p.location || ''},${p.clientName || ''},${p.status},${p.agreedCost}\n`;
-    });
+    projects.forEach(p => { csv += `${p.id},${p.name},${p.location || ''},${p.clientName || ''},${p.status},${p.agreedCost}\n`; });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1489,89 +1452,45 @@ document.getElementById('importFileInput').addEventListener('change', async (e) 
     reader.onload = async (ev) => {
         try {
             const data = JSON.parse(ev.target.result);
-            const response = await fetch('/api/import/json', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if (response.ok) {
-                alert('Import successful');
-                await loadProjects();
-            } else {
-                alert('Import failed');
-            }
-        } catch (err) {
-            alert('Invalid JSON file');
-        }
+            const response = await fetch('/api/import/json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            if (response.ok) { alert('Import successful'); await loadProjects(); } else { alert('Import failed'); }
+        } catch (err) { alert('Invalid JSON file'); }
     };
     reader.readAsText(file);
 });
-document.getElementById('csvImportFile').addEventListener('change', (e) => {
-    alert('CSV import not implemented in demo, but backend supports it');
-});
+document.getElementById('csvImportFile').addEventListener('change', (e) => { alert('CSV import not implemented in demo, but backend supports it'); });
 // ==================== DELETE SITES ====================
 function promptDeleteSitePassword() {
-    if (currentUser.role !== 'system_admin') {
-        alert('Only System Admin can delete sites');
-        return;
-    }
+    if (currentUser.role !== 'system_admin') { alert('Only System Admin can delete sites'); return; }
     deleteSiteAccessGranted = false;
     document.getElementById('deleteSitePassword').value = '';
     document.getElementById('passwordError').style.display = 'none';
     openModalAndBringToFront('passwordPromptModal');
 }
-function closePasswordPrompt() {
-    closeModalById('passwordPromptModal');
-}
-async function verifyDeleteSitePassword() {
-    deleteSiteAccessGranted = true;
-    closePasswordPrompt();
-    switchPanel('deleteSitePanel');
-    renderDeleteSitesList();
-}
+function closePasswordPrompt() { closeModalById('passwordPromptModal'); }
+async function verifyDeleteSitePassword() { deleteSiteAccessGranted = true; closePasswordPrompt(); switchPanel('deleteSitePanel'); renderDeleteSitesList(); }
 function renderDeleteSitesList() {
     const container = document.getElementById('deleteSitesListContainer');
-    if (projects.length === 0) {
-        container.innerHTML = '<p>No projects</p>';
-        return;
-    }
-    container.innerHTML = projects.map(proj => `
-        <div class="project-card delete-site-card">
-            <div class="project-name">${escapeHtml(proj.name)}</div>
-            <div class="project-meta">Status: ${proj.status} | Client: ${escapeHtml(proj.clientName)}</div>
-            <button class="delete-site-btn" onclick="deleteSiteCompletely('${proj.id}')">Permanently Delete Site</button>
-        </div>
-    `).join('');
+    if (projects.length === 0) { container.innerHTML = '<p>No projects</p>'; return; }
+    container.innerHTML = projects.map(proj => `<div class="project-card delete-site-card"><div class="project-name">${escapeHtml(proj.name)}</div><div class="project-meta">Status: ${proj.status} | Client: ${escapeHtml(proj.clientName)}</div><button class="delete-site-btn" onclick="deleteSiteCompletely('${proj.id}')">Permanently Delete Site</button></div>`).join('');
 }
 async function deleteSiteCompletely(projectId) {
     if (!confirm('⚠️ PERMANENT DELETION: This cannot be undone. Are you sure?')) return;
     const response = await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
-    if (response.ok) {
-        await loadProjects();
-        renderDeleteSitesList();
-        alert('Site permanently deleted');
-    } else {
-        alert('Error deleting site');
-    }
+    if (response.ok) { await loadProjects(); renderDeleteSitesList(); alert('Site permanently deleted'); } else { alert('Error deleting site'); }
 }
 // ==================== FINANCIAL REPORT ====================
 function showFullFinancialReport() {
     let totalNet = 0, totalExp = 0, totalTax = 0;
     projects.forEach(p => {
-        (p.invoiceHistory || []).forEach(inv => {
-            totalNet += (inv.afterTax || inv.amount);
-            totalTax += (inv.taxAmount || 0);
-        });
+        (p.invoiceHistory || []).forEach(inv => { totalNet += (inv.afterTax || inv.amount); totalTax += (inv.taxAmount || 0); });
         totalExp += (p.expenses || []).reduce((s, e) => s + (e.amt || 0), 0);
     });
     const profit = totalNet - totalExp;
     let html = `<h3>Complete Financial Report</h3><p>Total Net Income: ${formatKES(totalNet)}</p><p>Total Expenses: ${formatKES(totalExp)}</p><p>Net Profit: ${formatKES(profit)}</p><p>Total Tax Collected: ${formatKES(totalTax)}</p><hr><h4>Per Site Breakdown</h4>`;
     projects.forEach(p => {
         let siteNet = 0, siteTax = 0;
-        (p.invoiceHistory || []).forEach(inv => {
-            siteNet += (inv.afterTax || inv.amount);
-            siteTax += (inv.taxAmount || 0);
-        });
+        (p.invoiceHistory || []).forEach(inv => { siteNet += (inv.afterTax || inv.amount); siteTax += (inv.taxAmount || 0); });
         const siteExp = (p.expenses || []).reduce((s, e) => s + (e.amt || 0), 0);
         const siteProfit = siteNet - siteExp;
         html += `<p><strong>${escapeHtml(p.name)}</strong>: Net Income ${formatKES(siteNet)} | Tax ${formatKES(siteTax)} | Expenses ${formatKES(siteExp)} | Profit ${formatKES(siteProfit)}</p>`;
@@ -1612,9 +1531,7 @@ function showLoginTab(tab) {
 }
 function updateSiteDropdowns() {
     const select = document.getElementById('signupAssignedSites');
-    if (select) {
-        select.innerHTML = projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-    }
+    if (select) { select.innerHTML = projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join(''); }
 }
 async function attemptSignup() {
     const fullName = document.getElementById('signupName').value.trim();
@@ -1625,21 +1542,9 @@ async function attemptSignup() {
     const role = document.getElementById('signupRole').value;
     const assignedSitesSelect = document.getElementById('signupAssignedSites');
     const assignedSiteIds = assignedSitesSelect ? Array.from(assignedSitesSelect.selectedOptions).map(opt => opt.value) : [];
-    if (!fullName || !username || !password || !securityKey) {
-        document.getElementById('signupError').innerText = 'All fields required';
-        document.getElementById('signupError').style.display = 'block';
-        return;
-    }
-    if (password !== confirm) {
-        document.getElementById('signupError').innerText = 'Passwords do not match';
-        document.getElementById('signupError').style.display = 'block';
-        return;
-    }
-    if (password.length < 4) {
-        document.getElementById('signupError').innerText = 'Password must be at least 4 characters';
-        document.getElementById('signupError').style.display = 'block';
-        return;
-    }
+    if (!fullName || !username || !password || !securityKey) { document.getElementById('signupError').innerText = 'All fields required'; document.getElementById('signupError').style.display = 'block'; return; }
+    if (password !== confirm) { document.getElementById('signupError').innerText = 'Passwords do not match'; document.getElementById('signupError').style.display = 'block'; return; }
+    if (password.length < 4) { document.getElementById('signupError').innerText = 'Password must be at least 4 characters'; document.getElementById('signupError').style.display = 'block'; return; }
     const response = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1664,16 +1569,8 @@ async function resetForgottenPassword() {
     const securityKey = document.getElementById('forgotSecurityKey').value;
     const newPassword = document.getElementById('forgotNewPassword').value;
     const confirm = document.getElementById('forgotConfirmPassword').value;
-    if (newPassword !== confirm) {
-        document.getElementById('forgotError').innerText = 'Passwords do not match';
-        document.getElementById('forgotError').style.display = 'block';
-        return;
-    }
-    if (newPassword.length < 4) {
-        document.getElementById('forgotError').innerText = 'Password must be at least 4 characters';
-        document.getElementById('forgotError').style.display = 'block';
-        return;
-    }
+    if (newPassword !== confirm) { document.getElementById('forgotError').innerText = 'Passwords do not match'; document.getElementById('forgotError').style.display = 'block'; return; }
+    if (newPassword.length < 4) { document.getElementById('forgotError').innerText = 'Password must be at least 4 characters'; document.getElementById('forgotError').style.display = 'block'; return; }
     const response = await fetch('/api/reset_password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1695,7 +1592,10 @@ function closeModalById(modalId) {
 }
 function openModalAndBringToFront(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.style.display = 'block';
+    if (modal) {
+        modal.style.display = 'block';
+        bringToFront(modal);
+    }
 }
 function attachModalTabHandlers() {
     document.querySelectorAll('.modal-subtab').forEach(btn => {
