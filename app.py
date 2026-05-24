@@ -8,7 +8,7 @@ import uuid
 import json
 import secrets
 import os
-import re
+import sqlite3
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -21,7 +21,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login_page'
 
-# ============ Main ERP Models ============
+# ============ Database Models ============
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.String(50), primary_key=True)
@@ -154,9 +154,11 @@ class WorkshopRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     workshop_id = db.Column(db.Integer, db.ForeignKey('workshops.id'))
     name = db.Column(db.String(100), nullable=False)
-    department = db.Column(db.String(100))
+    worker_id = db.Column(db.String(50))
+    phone = db.Column(db.String(50))
     email = db.Column(db.String(100), nullable=False)
-    attended = db.Column(db.Boolean, default=False)
+    department = db.Column(db.String(100))
+    status = db.Column(db.String(20), default='pending')
     registered_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ============ TRAINING MODULE 2: SECURITY ============
@@ -177,6 +179,16 @@ class SecurityProgress(db.Model):
     quiz_score = db.Column(db.Integer, default=0)
     policy_accepted = db.Column(db.Boolean, default=False)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+class SecurityRegistration(db.Model):
+    __tablename__ = 'security_registrations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    worker_id = db.Column(db.String(50))
+    phone = db.Column(db.String(50))
+    email = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100))
+    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ============ TRAINING MODULE 3: SAFETY ============
 class SafetyCourse(db.Model):
@@ -201,6 +213,16 @@ class SafetyProgress(db.Model):
     last_reminder_sent = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class SafetyRegistration(db.Model):
+    __tablename__ = 'safety_registrations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    worker_id = db.Column(db.String(50))
+    phone = db.Column(db.String(50))
+    email = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100))
+    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 # ============ Helper Functions ============
 def login_required(role=None):
     def decorator(f):
@@ -216,7 +238,7 @@ def login_required(role=None):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(user_id)
+    return db.session.get(User, user_id)
 
 def send_email(to, subject, body):
     # Placeholder – replace with real email (Flask-Mail, SMTP, etc.)
@@ -412,9 +434,32 @@ def update_project(project_id):
     if not project:
         return jsonify({'success': False, 'error': 'Project not found'}), 404
     data = request.json
-    for key in ['expenses','incomes','materials','workers','siteNotes','manualTotalPaid','invoiceHistory','autoExpenseRecorded','autoIncomeRecorded','status','completionDate','endDate']:
-        if key in data:
-            setattr(project, key, data[key])
+    # Use the setter methods for JSON fields to convert lists to JSON strings
+    if 'expenses' in data:
+        project.set_expenses(data['expenses'])
+    if 'incomes' in data:
+        project.set_incomes(data['incomes'])
+    if 'materials' in data:
+        project.set_materials(data['materials'])
+    if 'workers' in data:
+        project.set_workers(data['workers'])
+    if 'siteNotes' in data:
+        project.set_site_notes(data['siteNotes'])
+    if 'invoiceHistory' in data:
+        project.set_invoice_history(data['invoiceHistory'])
+    if 'autoExpenseRecorded' in data:
+        project.set_auto_expense_recorded(data['autoExpenseRecorded'])
+    # Simple fields
+    if 'manualTotalPaid' in data:
+        project.manual_total_paid = data['manualTotalPaid']
+    if 'autoIncomeRecorded' in data:
+        project.auto_income_recorded = data['autoIncomeRecorded']
+    if 'status' in data:
+        project.status = data['status']
+    if 'completionDate' in data:
+        project.completion_date = data['completionDate']
+    if 'endDate' in data:
+        project.end_date = data['endDate']
     db.session.commit()
     return jsonify({'success': True})
 
@@ -632,6 +677,7 @@ def import_json():
     return jsonify({'success': True})
 
 # ============ TRAINING ROUTES ============
+# ---------- Workshop (Public and Admin) ----------
 @app.route('/training/workshop')
 def workshop_training():
     workshops = Workshop.query.order_by(Workshop.date).all()
@@ -641,18 +687,99 @@ def workshop_training():
 def register_workshop(workshop_id):
     data = request.form
     name = data.get('name')
+    worker_id = data.get('worker_id')
+    phone = data.get('phone')
     email = data.get('email')
     department = data.get('department')
     workshop = Workshop.query.get(workshop_id)
-    if not workshop or workshop.available_seats <= 0:
+    if not workshop:
+        return "Workshop not found", 404
+    if workshop.available_seats <= 0:
         return "No seats available", 400
-    reg = WorkshopRegistration(workshop_id=workshop_id, name=name, email=email, department=department)
-    workshop.available_seats -= 1
+    reg = WorkshopRegistration(workshop_id=workshop_id, name=name, worker_id=worker_id,
+                               phone=phone, email=email, department=department, status='pending')
     db.session.add(reg)
     db.session.commit()
-    send_email(email, "Workshop Registration", f"You are registered for {workshop.title} on {workshop.date}")
+    send_email("admin@example.com", "New Workshop Registration", f"{name} registered for {workshop.title}")
     return redirect(url_for('workshop_training'))
 
+# Workshop Admin API
+@app.route('/api/workshops', methods=['GET'])
+def get_workshops():
+    workshops = Workshop.query.all()
+    return jsonify({'workshops': [{'id': w.id, 'title': w.title, 'date': w.date, 'time': w.time,
+                                   'location': w.location, 'virtual_link': w.virtual_link,
+                                   'available_seats': w.available_seats} for w in workshops]})
+
+@app.route('/api/workshops', methods=['POST'])
+@login_required(role='system_admin|admin')
+def create_workshop():
+    data = request.json
+    workshop = Workshop(
+        title=data['title'], date=data['date'], time=data.get('time',''),
+        location=data.get('location',''), virtual_link=data.get('virtual_link',''),
+        available_seats=data.get('available_seats',10)
+    )
+    db.session.add(workshop)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/workshops/<int:workshop_id>', methods=['PUT'])
+@login_required(role='system_admin|admin')
+def update_workshop(workshop_id):
+    workshop = Workshop.query.get(workshop_id)
+    if not workshop:
+        return jsonify({'error': 'Not found'}), 404
+    data = request.json
+    workshop.title = data.get('title', workshop.title)
+    workshop.date = data.get('date', workshop.date)
+    workshop.time = data.get('time', workshop.time)
+    workshop.location = data.get('location', workshop.location)
+    workshop.virtual_link = data.get('virtual_link', workshop.virtual_link)
+    workshop.available_seats = data.get('available_seats', workshop.available_seats)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/workshops/<int:workshop_id>', methods=['DELETE'])
+@login_required(role='system_admin|admin')
+def delete_workshop(workshop_id):
+    workshop = Workshop.query.get(workshop_id)
+    if workshop:
+        WorkshopRegistration.query.filter_by(workshop_id=workshop_id).delete()
+        db.session.delete(workshop)
+        db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/workshop_registrations', methods=['GET'])
+def get_workshop_registrations():
+    regs = WorkshopRegistration.query.all()
+    return jsonify({'registrations': [{'id': r.id, 'workshop_id': r.workshop_id, 'name': r.name,
+                                       'worker_id': r.worker_id, 'phone': r.phone, 'email': r.email,
+                                       'department': r.department, 'status': r.status} for r in regs]})
+
+@app.route('/api/workshop_registrations/<int:reg_id>/approve', methods=['POST'])
+@login_required(role='system_admin|admin')
+def approve_registration(reg_id):
+    reg = WorkshopRegistration.query.get(reg_id)
+    if reg:
+        reg.status = 'approved'
+        workshop = Workshop.query.get(reg.workshop_id)
+        if workshop and workshop.available_seats > 0:
+            workshop.available_seats -= 1
+        db.session.commit()
+        send_email(reg.email, "Workshop Registration Approved", f"Your registration for {workshop.title} has been approved.")
+    return jsonify({'success': True})
+
+@app.route('/api/workshop_registrations/<int:reg_id>/reject', methods=['POST'])
+@login_required(role='system_admin|admin')
+def reject_registration(reg_id):
+    reg = WorkshopRegistration.query.get(reg_id)
+    if reg:
+        reg.status = 'rejected'
+        db.session.commit()
+    return jsonify({'success': True})
+
+# ---------- Security Training ----------
 @app.route('/training/security')
 def security_training():
     courses = SecurityCourse.query.all()
@@ -662,6 +789,17 @@ def security_training():
             prog = SecurityProgress.query.filter_by(user_id=current_user.id, course_id=c.id).first()
             progress[c.id] = prog.completed if prog else False
     return render_template('training/security.html', courses=courses, progress=progress)
+
+@app.route('/training/security/register', methods=['POST'])
+def register_security_training():
+    data = request.form
+    reg = SecurityRegistration(
+        name=data.get('name'), worker_id=data.get('worker_id'),
+        phone=data.get('phone'), email=data.get('email'), department=data.get('department')
+    )
+    db.session.add(reg)
+    db.session.commit()
+    return redirect(url_for('security_training'))
 
 @app.route('/training/security/complete/<int:course_id>', methods=['POST'])
 @login_required()
@@ -678,6 +816,67 @@ def complete_security_course(course_id):
     db.session.commit()
     return jsonify({'success': True})
 
+# Security Admin API
+@app.route('/api/security_courses', methods=['GET'])
+@login_required(role='system_admin|admin')
+def get_security_courses():
+    courses = SecurityCourse.query.all()
+    return jsonify({'courses': [{'id': c.id, 'title': c.title, 'description': c.description,
+                                 'video_url': c.video_url} for c in courses]})
+
+@app.route('/api/security_courses', methods=['POST'])
+@login_required(role='system_admin|admin')
+def create_security_course():
+    data = request.json
+    course = SecurityCourse(title=data['title'], description=data.get('description',''),
+                            video_url=data.get('video_url',''))
+    db.session.add(course)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/security_courses/<int:course_id>', methods=['PUT'])
+@login_required(role='system_admin|admin')
+def update_security_course(course_id):
+    course = SecurityCourse.query.get(course_id)
+    if not course:
+        return jsonify({'error': 'Not found'}), 404
+    data = request.json
+    course.title = data.get('title', course.title)
+    course.description = data.get('description', course.description)
+    course.video_url = data.get('video_url', course.video_url)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/security_courses/<int:course_id>', methods=['DELETE'])
+@login_required(role='system_admin|admin')
+def delete_security_course(course_id):
+    course = SecurityCourse.query.get(course_id)
+    if course:
+        db.session.delete(course)
+        db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/security_registrations', methods=['GET'])
+@login_required(role='system_admin|admin')
+def get_security_registrations():
+    regs = SecurityRegistration.query.all()
+    return jsonify({'registrations': [{'id': r.id, 'name': r.name, 'worker_id': r.worker_id,
+                                       'phone': r.phone, 'email': r.email, 'department': r.department,
+                                       'registered_at': r.registered_at.isoformat()} for r in regs]})
+
+@app.route('/api/security_progress', methods=['GET'])
+@login_required(role='system_admin|admin')
+def get_security_progress():
+    progress = SecurityProgress.query.all()
+    result = []
+    for p in progress:
+        user = User.query.get(p.user_id)
+        course = SecurityCourse.query.get(p.course_id)
+        result.append({'user': user.username if user else 'Unknown', 'course': course.title if course else 'Unknown',
+                       'completed': p.completed, 'score': p.quiz_score, 'policy_accepted': p.policy_accepted})
+    return jsonify({'progress': result})
+
+# ---------- Safety Training ----------
 @app.route('/training/safety')
 def safety_training():
     user_role = 'office'  # in real app, fetch from user profile
@@ -691,6 +890,17 @@ def safety_training():
             progress[c.id] = {'completed': prog.completed if prog else False,
                               'expiry': prog.expiry_date.isoformat() if prog and prog.expiry_date else None}
     return render_template('training/safety.html', courses=courses, progress=progress, user_role=user_role)
+
+@app.route('/training/safety/register', methods=['POST'])
+def register_safety_training():
+    data = request.form
+    reg = SafetyRegistration(
+        name=data.get('name'), worker_id=data.get('worker_id'),
+        phone=data.get('phone'), email=data.get('email'), department=data.get('department')
+    )
+    db.session.add(reg)
+    db.session.commit()
+    return redirect(url_for('safety_training'))
 
 @app.route('/training/safety/complete/<int:course_id>', methods=['POST'])
 @login_required()
@@ -711,9 +921,93 @@ def complete_safety_course(course_id):
     db.session.commit()
     return jsonify({'success': True, 'expiry': prog.expiry_date.isoformat()})
 
+# Safety Admin API
+@app.route('/api/safety_courses', methods=['GET'])
+@login_required(role='system_admin|admin')
+def get_safety_courses():
+    courses = SafetyCourse.query.all()
+    return jsonify({'courses': [{'id': c.id, 'title': c.title, 'role': c.role,
+                                 'video_url': c.video_url, 'pass_score': c.pass_score,
+                                 'expiry_days': c.expiry_days} for c in courses]})
+
+@app.route('/api/safety_courses', methods=['POST'])
+@login_required(role='system_admin|admin')
+def create_safety_course():
+    data = request.json
+    course = SafetyCourse(title=data['title'], role=data.get('role','all'),
+                          video_url=data.get('video_url',''), pass_score=data.get('pass_score',80),
+                          expiry_days=data.get('expiry_days',365))
+    db.session.add(course)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/safety_courses/<int:course_id>', methods=['PUT'])
+@login_required(role='system_admin|admin')
+def update_safety_course(course_id):
+    course = SafetyCourse.query.get(course_id)
+    if not course:
+        return jsonify({'error': 'Not found'}), 404
+    data = request.json
+    course.title = data.get('title', course.title)
+    course.role = data.get('role', course.role)
+    course.video_url = data.get('video_url', course.video_url)
+    course.pass_score = data.get('pass_score', course.pass_score)
+    course.expiry_days = data.get('expiry_days', course.expiry_days)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/safety_courses/<int:course_id>', methods=['DELETE'])
+@login_required(role='system_admin|admin')
+def delete_safety_course(course_id):
+    course = SafetyCourse.query.get(course_id)
+    if course:
+        db.session.delete(course)
+        db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/api/safety_registrations', methods=['GET'])
+@login_required(role='system_admin|admin')
+def get_safety_registrations():
+    regs = SafetyRegistration.query.all()
+    return jsonify({'registrations': [{'id': r.id, 'name': r.name, 'worker_id': r.worker_id,
+                                       'phone': r.phone, 'email': r.email, 'department': r.department,
+                                       'registered_at': r.registered_at.isoformat()} for r in regs]})
+
+@app.route('/api/safety_progress', methods=['GET'])
+@login_required(role='system_admin|admin')
+def get_safety_progress():
+    progress = SafetyProgress.query.all()
+    result = []
+    for p in progress:
+        user = User.query.get(p.user_id)
+        course = SafetyCourse.query.get(p.course_id)
+        result.append({'user': user.username if user else 'Unknown', 'course': course.title if course else 'Unknown',
+                       'completed': p.completed, 'score': p.quiz_score, 'expiry': p.expiry_date.isoformat() if p.expiry_date else None})
+    return jsonify({'progress': result})
+
+# ============ Database Migration for worker_id ============
+def add_missing_columns():
+    """Add worker_id column to workshop_registrations if it doesn't exist."""
+    conn = sqlite3.connect('erp_system.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute("PRAGMA table_info(workshop_registrations)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'worker_id' not in columns:
+            cursor.execute("ALTER TABLE workshop_registrations ADD COLUMN worker_id VARCHAR(50)")
+            conn.commit()
+            print("Added worker_id column to workshop_registrations")
+    except Exception as e:
+        print(f"Migration error: {e}")
+    finally:
+        conn.close()
+
 # ============ Initialize Database ============
 with app.app_context():
     db.create_all()
+    # Run migration to add missing column
+    add_missing_columns()
+    
     if not User.query.filter_by(role='system_admin').first():
         admin = User(
             id='sys_admin_001',
@@ -728,6 +1022,7 @@ with app.app_context():
         db.session.commit()
         print("✅ System Admin created: systemadmin / System@2025")
     
+    # Demo workshops
     if Workshop.query.count() == 0:
         w1 = Workshop(title="Electrical Safety Workshop", date="2025-06-15", time="10:00 AM",
                       location="Training Room A", virtual_link="https://zoom.us/123", available_seats=20)
@@ -736,6 +1031,7 @@ with app.app_context():
         db.session.add_all([w1, w2])
         db.session.commit()
     
+    # Demo security courses
     if SecurityCourse.query.count() == 0:
         c1 = SecurityCourse(title="Data Privacy", description="Learn how to protect company and client data.",
                             video_url="https://www.youtube.com/embed/dummy", quiz_questions='[]')
@@ -744,6 +1040,7 @@ with app.app_context():
         db.session.add_all([c1, c2])
         db.session.commit()
     
+    # Demo safety courses
     if SafetyCourse.query.count() == 0:
         s1 = SafetyCourse(title="Hazard Communication", role="all",
                           video_url="https://www.youtube.com/embed/dummy3", pass_score=80, expiry_days=365)
@@ -752,6 +1049,7 @@ with app.app_context():
         db.session.add_all([s1, s2])
         db.session.commit()
     
+    # Demo projects
     if Project.query.count() == 0:
         p1 = Project(
             id='p1', company_id='default', name='Green Valley Electrical',

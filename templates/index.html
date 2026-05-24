@@ -30,7 +30,7 @@
         .dropdown { position: relative; display: inline-block; }
         .dropdown-btn { background: transparent; border: none; padding: 14px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; color: #2c5a74; border-radius: 30px 30px 0 0; transition: all 0.2s; font-family: inherit; }
         .dropdown-btn:hover { background: rgba(31, 110, 108, 0.1); }
-        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 220px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100000; border-radius: 12px; overflow: hidden; top: 100%; left: 0; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 260px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 100000; border-radius: 12px; overflow: hidden; top: 100%; left: 0; }
         .dropdown-content button { color: #2c5a74; padding: 12px 16px; text-decoration: none; display: block; width: 100%; text-align: left; background: white; border: none; border-radius: 0; font-weight: 500; cursor: pointer; }
         .dropdown-content button:hover { background-color: #eef2f7; color: #0f4c5f; }
         .dropdown:hover .dropdown-content { display: block; }
@@ -76,6 +76,7 @@
         .modal-content { max-width: 1300px; margin: 20px auto; background: white; border-radius: 32px; padding: 24px; position: relative; }
         .modal-small { max-width: 450px; }
         .modal-medium { max-width: 800px; }
+        .modal-large { max-width: 1000px; }
         .modal-subtab { background: #eef2f7; border: none; padding: 8px 20px; border-radius: 40px; margin-right: 8px; cursor: pointer; transition: 0.2s; }
         .modal-subtab.active { background: #1f6e6c; color: white; }
         .subtab-content { margin-top: 20px; }
@@ -117,6 +118,11 @@
         .pending-request-item { background: #fff8e1; border-left: 4px solid #f39c12; padding: 10px; margin: 10px 0; border-radius: 8px; }
         .approve-btn { background: #27ae60; font-size: 0.7rem; padding: 4px 10px; margin: 0 2px; border: none; color: white; border-radius: 20px; cursor: pointer; }
         .reject-btn { background: #e74c3c; font-size: 0.7rem; padding: 4px 10px; margin: 0 2px; border: none; color: white; border-radius: 20px; cursor: pointer; }
+        .workshop-card { background: white; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        .registration-item { background: #f9f9f9; border-left: 4px solid #1f6e6c; padding: 12px; margin: 10px 0; border-radius: 8px; }
+        .status-pending { color: #e67e22; }
+        .status-approved { color: #27ae60; }
+        .status-rejected { color: #e74c3c; }
         @media (max-width: 700px) { .panel { padding: 16px; } .card-buttons { flex-direction: column; } .company-text h1 { font-size: 1rem; } .footer-line { font-size: 0.7rem; } }
     </style>
 </head>
@@ -155,8 +161,11 @@
             <div class="dropdown-content">
                 <button onclick="switchPanel('dataPanel')"><i class="fas fa-file-export"></i> Import/Export Data</button>
                 <button onclick="switchPanel('recommendationPanel')"><i class="fas fa-file-alt"></i> Recommendation Letter</button>
+                <button onclick="openWorkshopAdminPanel()"><i class="fas fa-chalkboard-user"></i> Manage Workshops</button>
+                <button onclick="openSecurityAdminPanel()"><i class="fas fa-shield-alt"></i> Manage Security Training</button>
+                <button onclick="openSafetyAdminPanel()"><i class="fas fa-hard-hat"></i> Manage Safety Training</button>
                 <hr style="margin: 8px 0;">
-                <button onclick="window.location.href='/training/workshop'"><i class="fas fa-chalkboard-user"></i> Workshop Training</button>
+                <button onclick="window.location.href='/training/workshop'"><i class="fas fa-calendar-alt"></i> Workshop Training (Public)</button>
                 <button onclick="window.location.href='/training/security'"><i class="fas fa-shield-alt"></i> Security Training</button>
                 <button onclick="window.location.href='/training/safety'"><i class="fas fa-hard-hat"></i> Safety Training</button>
             </div>
@@ -171,7 +180,7 @@
     <div id="jobBoardPanel" class="panel"><h2><i class="fas fa-briefcase"></i> Job Board</h2><div id="jobBoardContainer"></div><div id="adminJobControls" style="display:none; margin-top:20px;"><hr><h3>Post New Job (Admin only)</h3><div class="form-row"><div class="form-group"><input type="text" id="jobTitle" placeholder="Job Title"></div><div class="form-group"><input type="text" id="jobLocation" placeholder="Location"></div></div><div class="form-row"><div class="form-group"><textarea id="jobDescription" rows="3" placeholder="Job Description"></textarea></div></div><div class="form-row"><div class="form-group"><input type="text" id="jobContact" placeholder="Contact info (email/phone)"></div></div><button onclick="postJob()"><i class="fas fa-plus"></i> Post Job</button></div></div>
     <div id="suggestionsPanel" class="panel"><h2><i class="fas fa-comment"></i> Suggestions / Feedback</h2><div id="suggestionsContainer"></div><hr><h3>Submit a Suggestion</h3><div class="form-row"><div class="form-group"><input type="text" id="suggestionName" placeholder="Your Name (optional)"></div></div><div class="form-row"><div class="form-group"><textarea id="suggestionText" rows="3" placeholder="Your suggestion..."></textarea></div></div><button onclick="submitSuggestion()"><i class="fas fa-paper-plane"></i> Submit Suggestion</button></div></div>
     
-    <!-- FOOTER – only copyright, email, developer, and terms/privacy -->
+    <!-- FOOTER -->
     <div class="company-footer">
         <div class="footer-line">
             © 2026 Safari Softwares. All rights reserved. &nbsp;&nbsp;&nbsp; Email: <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a>
@@ -262,80 +271,40 @@
 <!-- Terms of Service Modal -->
 <div id="termsModal" class="modal">
     <div class="modal-content modal-medium" style="max-width: 700px;">
-        <div class="flex-between">
-            <h2><i class="fas fa-file-contract"></i> Terms of Service</h2>
-            <button onclick="closeModalById('termsModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button>
-        </div>
-        <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
-            <h3>1. Acceptance of Terms</h3>
-            <p>By using this ERP system (“Software”), you agree to be bound by these Terms of Service. If you do not agree, do not use the Software.</p>
-            <h3>2. Description of Service</h3>
-            <p>Safari Softwares provides a construction management ERP system including project tracking, worker management, invoicing, training modules, and related tools (“Service”).</p>
-            <h3>3. User Accounts</h3>
-            <p>You are responsible for maintaining the confidentiality of your login credentials. Safari Softwares is not liable for any unauthorized access resulting from your failure to secure your account.</p>
-            <h3>4. Acceptable Use</h3>
-            <p>You agree not to: (a) use the Service for any illegal purpose; (b) attempt to gain unauthorized access to any part of the Service; (c) upload malicious code; (d) interfere with the operation of the Service.</p>
-            <h3>5. Data Ownership & Privacy</h3>
-            <p>You retain all ownership of data you enter. Safari Softwares processes your data only to provide the Service. See our Privacy Policy for details.</p>
-            <h3>6. Subscription & Payments</h3>
-            <p>Certain features may require a paid subscription. Fees are non‑refundable unless otherwise stated. Safari Softwares may change fees with 30 days’ notice.</p>
-            <h3>7. Termination</h3>
-            <p>Either party may terminate this agreement at any time. Safari Softwares may suspend or terminate access immediately for violation of these Terms.</p>
-            <h3>8. Disclaimer of Warranties</h3>
-            <p>The Service is provided “as is” without warranties of merchantability, fitness for a particular purpose, or non‑infringement. Safari Softwares does not warrant that the Service will be uninterrupted or error‑free.</p>
-            <h3>9. Limitation of Liability</h3>
-            <p>To the maximum extent permitted by law, Safari Softwares shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the Service.</p>
-            <h3>10. Indemnification</h3>
-            <p>You agree to indemnify and hold harmless Safari Softwares from any claims, damages, or expenses arising from your violation of these Terms or applicable laws.</p>
-            <h3>11. Governing Law</h3>
-            <p>These Terms shall be governed by the laws of the Republic of Kenya. Any disputes shall be resolved exclusively in the courts of Nairobi, Kenya.</p>
-            <h3>12. Changes to Terms</h3>
-            <p>Safari Softwares may modify these Terms at any time. Continued use of the Service after changes constitutes acceptance.</p>
-            <h3>13. Entire Agreement</h3>
-            <p>These Terms constitute the entire agreement between you and Safari Softwares regarding the Service.</p>
-            <h3>14. Contact</h3>
-            <p>Questions? Email us at <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a>.</p>
-            <p style="margin-top: 20px;"><em>Last updated: May 24, 2026</em></p>
-        </div>
+        <div class="flex-between"><h2><i class="fas fa-file-contract"></i> Terms of Service</h2><button onclick="closeModalById('termsModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div>
+        <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;"><h3>1. Acceptance of Terms</h3><p>By using this ERP system (“Software”), you agree to be bound by these Terms of Service. If you do not agree, do not use the Software.</p><h3>2. Description of Service</h3><p>Safari Softwares provides a construction management ERP system including project tracking, worker management, invoicing, training modules, and related tools (“Service”).</p><h3>3. User Accounts</h3><p>You are responsible for maintaining the confidentiality of your login credentials. Safari Softwares is not liable for any unauthorized access resulting from your failure to secure your account.</p><h3>4. Acceptable Use</h3><p>You agree not to: (a) use the Service for any illegal purpose; (b) attempt to gain unauthorized access to any part of the Service; (c) upload malicious code; (d) interfere with the operation of the Service.</p><h3>5. Data Ownership & Privacy</h3><p>You retain all ownership of data you enter. Safari Softwares processes your data only to provide the Service. See our Privacy Policy for details.</p><h3>6. Subscription & Payments</h3><p>Certain features may require a paid subscription. Fees are non‑refundable unless otherwise stated. Safari Softwares may change fees with 30 days’ notice.</p><h3>7. Termination</h3><p>Either party may terminate this agreement at any time. Safari Softwares may suspend or terminate access immediately for violation of these Terms.</p><h3>8. Disclaimer of Warranties</h3><p>The Service is provided “as is” without warranties of merchantability, fitness for a particular purpose, or non‑infringement. Safari Softwares does not warrant that the Service will be uninterrupted or error‑free.</p><h3>9. Limitation of Liability</h3><p>To the maximum extent permitted by law, Safari Softwares shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the Service.</p><h3>10. Indemnification</h3><p>You agree to indemnify and hold harmless Safari Softwares from any claims, damages, or expenses arising from your violation of these Terms or applicable laws.</p><h3>11. Governing Law</h3><p>These Terms shall be governed by the laws of the Republic of Kenya. Any disputes shall be resolved exclusively in the courts of Nairobi, Kenya.</p><h3>12. Changes to Terms</h3><p>Safari Softwares may modify these Terms at any time. Continued use of the Service after changes constitutes acceptance.</p><h3>13. Entire Agreement</h3><p>These Terms constitute the entire agreement between you and Safari Softwares regarding the Service.</p><h3>14. Contact</h3><p>Questions? Email us at <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a>.</p><p style="margin-top: 20px;"><em>Last updated: May 24, 2026</em></p></div>
     </div>
 </div>
 
 <!-- Privacy Policy Modal -->
 <div id="privacyModal" class="modal">
     <div class="modal-content modal-medium" style="max-width: 700px;">
-        <div class="flex-between">
-            <h2><i class="fas fa-lock"></i> Privacy Policy</h2>
-            <button onclick="closeModalById('privacyModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button>
-        </div>
-        <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
-            <h3>1. Information We Collect</h3>
-            <p>We collect personal information you provide directly, such as name, email address, username, phone number, company name, and project/worker details. We also automatically collect usage data (IP address, browser type, pages visited) to improve our Service.</p>
-            <h3>2. How We Use Your Information</h3>
-            <p>We use your information to: (a) provide, maintain, and improve the Service; (b) process transactions; (c) send administrative messages; (d) comply with legal obligations; (e) enforce our Terms of Service.</p>
-            <h3>3. Data Sharing & Disclosure</h3>
-            <p>We do not sell your personal data. We may share data: (a) with your consent; (b) to comply with laws or legal requests; (c) with service providers who help us operate the Service (e.g., hosting, email, analytics); (d) in connection with a merger, acquisition, or bankruptcy.</p>
-            <h3>4. Data Security</h3>
-            <p>We implement reasonable security measures such as encryption (AES-256 for stored data, TLS for transmission), access controls, firewalls, and regular backups. However, no system is 100% secure. You use the Service at your own risk.</p>
-            <h3>5. Data Retention</h3>
-            <p>We retain your data as long as your account is active or as needed to provide the Service. You may request deletion by contacting us. Some data may be retained to comply with legal obligations.</p>
-            <h3>6. Cookies & Tracking</h3>
-            <p>We use essential session cookies to keep you logged in. You may disable cookies in your browser, but some features may not work. We do not use third‑party tracking cookies.</p>
-            <h3>7. Your Rights</h3>
-            <p>Depending on your jurisdiction, you may have the right to access, correct, delete, or port your personal data, or object to processing. Contact us to exercise these rights. We will respond within 30 days.</p>
-            <h3>8. International Transfers</h3>
-            <p>Your data may be transferred to and processed in countries other than your own. We ensure appropriate safeguards (e.g., Standard Contractual Clauses) are in place.</p>
-            <h3>9. Children’s Privacy</h3>
-            <p>The Service is not intended for children under 16. We do not knowingly collect information from children. If we become aware of such data, we will delete it.</p>
-            <h3>10. Third‑Party Links</h3>
-            <p>The Service may contain links to third‑party websites (e.g., training videos). We are not responsible for their privacy practices.</p>
-            <h3>11. Changes to This Privacy Policy</h3>
-            <p>We may update this policy from time to time. The “Last updated” date will change. Continued use constitutes acceptance.</p>
-            <h3>12. Data Breach Notification</h3>
-            <p>In the event of a data breach, we will notify affected users within 72 hours as required by applicable law.</p>
-            <h3>13. Contact Us</h3>
-            <p>If you have any questions about this Privacy Policy, or to exercise your data rights, please contact us at <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a> or write to: Safari Softwares, Nairobi, Kenya.</p>
-            <p style="margin-top: 20px;"><em>Last updated: May 24, 2026</em></p>
-        </div>
+        <div class="flex-between"><h2><i class="fas fa-lock"></i> Privacy Policy</h2><button onclick="closeModalById('privacyModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div>
+        <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;"><h3>1. Information We Collect</h3><p>We collect personal information you provide directly, such as name, email address, username, phone number, company name, and project/worker details. We also automatically collect usage data (IP address, browser type, pages visited) to improve our Service.</p><h3>2. How We Use Your Information</h3><p>We use your information to: (a) provide, maintain, and improve the Service; (b) process transactions; (c) send administrative messages; (d) comply with legal obligations; (e) enforce our Terms of Service.</p><h3>3. Data Sharing & Disclosure</h3><p>We do not sell your personal data. We may share data: (a) with your consent; (b) to comply with laws or legal requests; (c) with service providers who help us operate the Service (e.g., hosting, email, analytics); (d) in connection with a merger, acquisition, or bankruptcy.</p><h3>4. Data Security</h3><p>We implement reasonable security measures such as encryption (AES-256 for stored data, TLS for transmission), access controls, firewalls, and regular backups. However, no system is 100% secure. You use the Service at your own risk.</p><h3>5. Data Retention</h3><p>We retain your data as long as your account is active or as needed to provide the Service. You may request deletion by contacting us. Some data may be retained to comply with legal obligations.</p><h3>6. Cookies & Tracking</h3><p>We use essential session cookies to keep you logged in. You may disable cookies in your browser, but some features may not work. We do not use third‑party tracking cookies.</p><h3>7. Your Rights</h3><p>Depending on your jurisdiction, you may have the right to access, correct, delete, or port your personal data, or object to processing. Contact us to exercise these rights. We will respond within 30 days.</p><h3>8. International Transfers</h3><p>Your data may be transferred to and processed in countries other than your own. We ensure appropriate safeguards (e.g., Standard Contractual Clauses) are in place.</p><h3>9. Children’s Privacy</h3><p>The Service is not intended for children under 16. We do not knowingly collect information from children. If we become aware of such data, we will delete it.</p><h3>10. Third‑Party Links</h3><p>The Service may contain links to third‑party websites (e.g., training videos). We are not responsible for their privacy practices.</p><h3>11. Changes to This Privacy Policy</h3><p>We may update this policy from time to time. The “Last updated” date will change. Continued use constitutes acceptance.</p><h3>12. Data Breach Notification</h3><p>In the event of a data breach, we will notify affected users within 72 hours as required by applicable law.</p><h3>13. Contact Us</h3><p>If you have any questions about this Privacy Policy, or to exercise your data rights, please contact us at <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a> or write to: Safari Softwares, Nairobi, Kenya.</p><p style="margin-top: 20px;"><em>Last updated: May 24, 2026</em></p></div>
+    </div>
+</div>
+
+<!-- Workshop Admin Modal -->
+<div id="workshopAdminModal" class="modal">
+    <div class="modal-content modal-large" style="max-width: 1000px;">
+        <div class="flex-between"><h2><i class="fas fa-chalkboard-user"></i> Manage Workshops & Registrations</h2><button onclick="closeModalById('workshopAdminModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div>
+        <div id="workshopAdminContent" style="max-height: 70vh; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<!-- Security Admin Modal -->
+<div id="securityAdminModal" class="modal">
+    <div class="modal-content modal-large" style="max-width: 1000px;">
+        <div class="flex-between"><h2><i class="fas fa-shield-alt"></i> Manage Security Training</h2><button onclick="closeModalById('securityAdminModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div>
+        <div id="securityAdminContent" style="max-height: 70vh; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<!-- Safety Admin Modal -->
+<div id="safetyAdminModal" class="modal">
+    <div class="modal-content modal-large" style="max-width: 1000px;">
+        <div class="flex-between"><h2><i class="fas fa-hard-hat"></i> Manage Safety Training</h2><button onclick="closeModalById('safetyAdminModal')" style="background:#c0392b"><i class="fas fa-times"></i> Close</button></div>
+        <div id="safetyAdminContent" style="max-height: 70vh; overflow-y: auto;"></div>
     </div>
 </div>
 
@@ -352,6 +321,8 @@ let currentEditWorkerIndex = null;
 let currentEditProjectId = null;
 let pendingAdminRequests = [];
 let modalZCounter = 100000;
+let workshops = [];
+let registrations = [];
 
 // ==================== UTILITIES ====================
 function escapeHtml(str) {
@@ -363,14 +334,10 @@ function escapeHtml(str) {
         return m;
     });
 }
-
 function formatKES(amount) {
     if (amount === undefined || amount === null) return "KES 0";
     return "KES " + amount.toLocaleString('en-KE');
 }
-
-function showToast(msg) { alert(msg); }
-
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     const btn = input.parentElement.querySelector('.toggle-password');
@@ -382,36 +349,12 @@ function togglePassword(inputId) {
         btn.innerHTML = '<i class="fas fa-eye"></i>';
     }
 }
-
-function openTermsModal() {
-    document.getElementById('termsModal').style.display = 'block';
-    bringToFront(document.getElementById('termsModal'));
-}
-function openPrivacyModal() {
-    document.getElementById('privacyModal').style.display = 'block';
-    bringToFront(document.getElementById('privacyModal'));
-}
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-    }
-}
-function bringToFront(modalElement) {
-    if (!modalElement) return;
-    modalZCounter += 10;
-    modalElement.style.zIndex = modalZCounter;
-}
-function openModalAndBringToFront(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'block';
-        bringToFront(modal);
-    }
-}
-function closeModalById(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.style.display = 'none';
-}
+function openTermsModal() { document.getElementById('termsModal').style.display = 'block'; bringToFront(document.getElementById('termsModal')); }
+function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'block'; bringToFront(document.getElementById('privacyModal')); }
+window.onclick = function(event) { if (event.target.classList.contains('modal')) event.target.style.display = 'none'; };
+function bringToFront(modalElement) { if (!modalElement) return; modalZCounter += 10; modalElement.style.zIndex = modalZCounter; }
+function openModalAndBringToFront(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.style.display = 'block'; bringToFront(modal); } }
+function closeModalById(modalId) { const modal = document.getElementById(modalId); if (modal) modal.style.display = 'none'; }
 
 // ==================== LOGIN / SESSION ====================
 async function attemptLogin() {
@@ -444,6 +387,7 @@ async function attemptLogin() {
             await loadCompanySettings();
             await loadJobs();
             await loadSuggestions();
+            await loadWorkshopsAndRegistrations();
             renderJobBoard();
             renderSuggestions();
             renderPublicJobBoard();
@@ -457,7 +401,6 @@ async function attemptLogin() {
         errorDiv.style.display = 'block';
     }
 }
-
 async function logout() {
     await fetch('/api/logout', { method: 'POST' });
     currentUser = null;
@@ -466,7 +409,6 @@ async function logout() {
     bringToFront(document.getElementById('loginModal'));
     showLoginTab('login');
 }
-
 async function checkSession() {
     const response = await fetch('/api/current_user');
     const data = await response.json();
@@ -488,11 +430,320 @@ async function checkSession() {
         await loadCompanySettings();
         await loadJobs();
         await loadSuggestions();
+        await loadWorkshopsAndRegistrations();
         renderJobBoard();
         renderSuggestions();
         renderPublicJobBoard();
         switchPanel('activePanel');
     }
+}
+
+// ==================== WORKSHOP ADMIN ====================
+async function loadWorkshopsAndRegistrations() {
+    try {
+        const res = await fetch('/api/workshops');
+        const data = await res.json();
+        workshops = data.workshops || [];
+        const regRes = await fetch('/api/workshop_registrations');
+        const regData = await regRes.json();
+        registrations = regData.registrations || [];
+    } catch(e) { console.error(e); }
+}
+async function openWorkshopAdminPanel() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can manage workshops'); return; }
+    await loadWorkshopsAndRegistrations();
+    renderWorkshopAdminPanel();
+    openModalAndBringToFront('workshopAdminModal');
+}
+function renderWorkshopAdminPanel() {
+    const container = document.getElementById('workshopAdminContent');
+    let html = '<h3>Workshops</h3><button onclick="showAddWorkshopForm()" style="margin-bottom:15px;">+ Add Workshop</button>';
+    if (workshops.length === 0) html += '<p>No workshops yet.</p>';
+    else {
+        workshops.forEach(ws => {
+            html += `<div class="workshop-card"><div class="flex-between"><h3>${escapeHtml(ws.title)}</h3><div><button onclick="editWorkshop('${ws.id}')">Edit</button><button onclick="deleteWorkshop('${ws.id}')" style="background:#c0392b;">Delete</button></div></div>
+            <p><strong>Date:</strong> ${ws.date} at ${ws.time}</p>
+            <p><strong>Location:</strong> ${escapeHtml(ws.location)} ${ws.virtual_link ? `(<a href="${ws.virtual_link}" target="_blank">Virtual Link</a>)` : ''}</p>
+            <p><strong>Available seats:</strong> ${ws.available_seats}</p>
+            <h4>Registrations</h4>${renderRegistrationsForWorkshop(ws.id)}</div>`;
+        });
+    }
+    container.innerHTML = html;
+}
+function renderRegistrationsForWorkshop(workshopId) {
+    const regs = registrations.filter(r => r.workshop_id == workshopId);
+    if (regs.length === 0) return '<p>No registrations yet.</p>';
+    let html = '<table style="width:100%;"><thead><tr><th>Name</th><th>Worker ID</th><th>Phone</th><th>Email</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    regs.forEach(reg => {
+        html += `<tr><td>${escapeHtml(reg.name)}</td><td>${escapeHtml(reg.worker_id || '')}</td><td>${escapeHtml(reg.phone)}</td><td>${escapeHtml(reg.email)}</td><td>${escapeHtml(reg.department || '')}</td>
+        <td class="${reg.status === 'pending' ? 'status-pending' : (reg.status === 'approved' ? 'status-approved' : 'status-rejected')}">${reg.status}</td>
+        <td>${reg.status === 'pending' ? `<button onclick="approveRegistration(${reg.id})" style="background:#27ae60;">Approve</button> <button onclick="rejectRegistration(${reg.id})" style="background:#e74c3c;">Reject</button>` : (reg.status === 'approved' ? '✔ Approved' : '✘ Rejected')}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    return html;
+}
+function showAddWorkshopForm() {
+    const container = document.getElementById('workshopAdminContent');
+    container.innerHTML = `<div><h3>Add New Workshop</h3>
+        <div class="form-group"><label>Title</label><input type="text" id="newWsTitle"></div>
+        <div class="form-group"><label>Date (YYYY-MM-DD)</label><input type="date" id="newWsDate"></div>
+        <div class="form-group"><label>Time</label><input type="text" id="newWsTime"></div>
+        <div class="form-group"><label>Location</label><input type="text" id="newWsLocation"></div>
+        <div class="form-group"><label>Virtual Link</label><input type="url" id="newWsVirtualLink"></div>
+        <div class="form-group"><label>Available Seats</label><input type="number" id="newWsSeats" value="10"></div>
+        <div style="display:flex; gap:10px;"><button onclick="renderWorkshopAdminPanel()">Cancel</button><button onclick="saveNewWorkshop()" style="background:#2c8c6e;">Save</button></div>
+    </div>`;
+}
+async function saveNewWorkshop() {
+    const data = {
+        title: document.getElementById('newWsTitle').value,
+        date: document.getElementById('newWsDate').value,
+        time: document.getElementById('newWsTime').value,
+        location: document.getElementById('newWsLocation').value,
+        virtual_link: document.getElementById('newWsVirtualLink').value,
+        available_seats: parseInt(document.getElementById('newWsSeats').value)
+    };
+    const res = await fetch('/api/workshops', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (res.ok) { alert('Workshop added'); await loadWorkshopsAndRegistrations(); renderWorkshopAdminPanel(); }
+    else alert('Error');
+}
+async function editWorkshop(workshopId) {
+    const ws = workshops.find(w => w.id == workshopId);
+    const container = document.getElementById('workshopAdminContent');
+    container.innerHTML = `<div><h3>Edit Workshop</h3>
+        <div class="form-group"><label>Title</label><input type="text" id="editWsTitle" value="${escapeHtml(ws.title)}"></div>
+        <div class="form-group"><label>Date</label><input type="date" id="editWsDate" value="${ws.date}"></div>
+        <div class="form-group"><label>Time</label><input type="text" id="editWsTime" value="${escapeHtml(ws.time)}"></div>
+        <div class="form-group"><label>Location</label><input type="text" id="editWsLocation" value="${escapeHtml(ws.location)}"></div>
+        <div class="form-group"><label>Virtual Link</label><input type="url" id="editWsVirtualLink" value="${ws.virtual_link || ''}"></div>
+        <div class="form-group"><label>Available Seats</label><input type="number" id="editWsSeats" value="${ws.available_seats}"></div>
+        <div style="display:flex; gap:10px;"><button onclick="renderWorkshopAdminPanel()">Cancel</button><button onclick="updateWorkshop('${workshopId}')" style="background:#2c8c6e;">Update</button></div>
+    </div>`;
+}
+async function updateWorkshop(workshopId) {
+    const data = {
+        title: document.getElementById('editWsTitle').value,
+        date: document.getElementById('editWsDate').value,
+        time: document.getElementById('editWsTime').value,
+        location: document.getElementById('editWsLocation').value,
+        virtual_link: document.getElementById('editWsVirtualLink').value,
+        available_seats: parseInt(document.getElementById('editWsSeats').value)
+    };
+    const res = await fetch(`/api/workshops/${workshopId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (res.ok) { alert('Updated'); await loadWorkshopsAndRegistrations(); renderWorkshopAdminPanel(); }
+    else alert('Error');
+}
+async function deleteWorkshop(workshopId) {
+    if (!confirm('Delete this workshop and all registrations?')) return;
+    const res = await fetch(`/api/workshops/${workshopId}`, { method: 'DELETE' });
+    if (res.ok) { alert('Deleted'); await loadWorkshopsAndRegistrations(); renderWorkshopAdminPanel(); }
+    else alert('Error');
+}
+async function approveRegistration(regId) {
+    const res = await fetch(`/api/workshop_registrations/${regId}/approve`, { method: 'POST' });
+    if (res.ok) { alert('Approved'); await loadWorkshopsAndRegistrations(); renderWorkshopAdminPanel(); }
+    else alert('Error');
+}
+async function rejectRegistration(regId) {
+    const res = await fetch(`/api/workshop_registrations/${regId}/reject`, { method: 'POST' });
+    if (res.ok) { alert('Rejected'); await loadWorkshopsAndRegistrations(); renderWorkshopAdminPanel(); }
+    else alert('Error');
+}
+
+// ==================== SECURITY ADMIN PANEL ====================
+async function openSecurityAdminPanel() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can manage security training'); return; }
+    await loadSecurityData();
+    renderSecurityAdminPanel();
+    openModalAndBringToFront('securityAdminModal');
+}
+async function loadSecurityData() {
+    try {
+        const coursesRes = await fetch('/api/security_courses');
+        window.securityCourses = (await coursesRes.json()).courses || [];
+        const regRes = await fetch('/api/security_registrations');
+        window.securityRegistrations = (await regRes.json()).registrations || [];
+        const progRes = await fetch('/api/security_progress');
+        window.securityProgress = (await progRes.json()).progress || [];
+    } catch(e) { console.error(e); }
+}
+function renderSecurityAdminPanel() {
+    const container = document.getElementById('securityAdminContent');
+    let html = '<h3>Security Courses</h3><button onclick="showAddSecurityCourseForm()">+ Add Course</button>';
+    if (window.securityCourses.length === 0) html += '<p>No courses.</p>';
+    else {
+        html += '<table style="width:100%;"><thead><tr><th>Title</th><th>Description</th><th>Actions</th></tr></thead><tbody>';
+        window.securityCourses.forEach(c => {
+            html += `<tr><td>${escapeHtml(c.title)}</td><td>${escapeHtml(c.description)}</td><td><button onclick="editSecurityCourse(${c.id})">Edit</button><button onclick="deleteSecurityCourse(${c.id})" style="background:#c0392b;">Delete</button></td></tr>`;
+        });
+        html += '</tbody></table>';
+    }
+    html += '<hr><h3>Registrations</h3>';
+    if (window.securityRegistrations.length === 0) html += '<p>No registrations.</p>';
+    else {
+        html += '<table style="width:100%;"><thead><tr><th>Name</th><th>Worker ID</th><th>Phone</th><th>Email</th><th>Department</th><th>Registered</th></tr></thead><tbody>';
+        window.securityRegistrations.forEach(r => {
+            html += `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.worker_id || '')}</td><td>${escapeHtml(r.phone)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.department || '')}</td><td>${new Date(r.registered_at).toLocaleString()}</td></tr>`;
+        });
+        html += '</tbody></table>';
+    }
+    html += '<hr><h3>Progress</h3>';
+    if (window.securityProgress.length === 0) html += '<p>No progress.</p>';
+    else {
+        html += '<table style="width:100%;"><thead><tr><th>User</th><th>Course</th><th>Completed</th><th>Score</th><th>Policy Accepted</th></tr></thead><tbody>';
+        window.securityProgress.forEach(p => {
+            html += `<tr><td>${escapeHtml(p.user)}</td><td>${escapeHtml(p.course)}</td><td>${p.completed ? 'Yes' : 'No'}</td><td>${p.score}</td><td>${p.policy_accepted ? 'Yes' : 'No'}</td></tr>`;
+        });
+        html += '</tbody></table>';
+    }
+    container.innerHTML = html;
+}
+function showAddSecurityCourseForm() {
+    const container = document.getElementById('securityAdminContent');
+    container.innerHTML = `<div><h3>Add Security Course</h3>
+        <div class="form-group"><label>Title</label><input type="text" id="newSecTitle"></div>
+        <div class="form-group"><label>Description</label><textarea id="newSecDesc"></textarea></div>
+        <div class="form-group"><label>Video URL</label><input type="url" id="newSecVideo"></div>
+        <div style="display:flex; gap:10px;"><button onclick="renderSecurityAdminPanel()">Cancel</button><button onclick="saveSecurityCourse()" style="background:#2c8c6e;">Save</button></div>
+    </div>`;
+}
+async function saveSecurityCourse() {
+    const data = {
+        title: document.getElementById('newSecTitle').value,
+        description: document.getElementById('newSecDesc').value,
+        video_url: document.getElementById('newSecVideo').value
+    };
+    const res = await fetch('/api/security_courses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (res.ok) { alert('Course added'); await loadSecurityData(); renderSecurityAdminPanel(); }
+    else alert('Error');
+}
+async function editSecurityCourse(courseId) {
+    const course = window.securityCourses.find(c => c.id == courseId);
+    const container = document.getElementById('securityAdminContent');
+    container.innerHTML = `<div><h3>Edit Security Course</h3>
+        <div class="form-group"><label>Title</label><input type="text" id="editSecTitle" value="${escapeHtml(course.title)}"></div>
+        <div class="form-group"><label>Description</label><textarea id="editSecDesc">${escapeHtml(course.description)}</textarea></div>
+        <div class="form-group"><label>Video URL</label><input type="url" id="editSecVideo" value="${course.video_url || ''}"></div>
+        <div style="display:flex; gap:10px;"><button onclick="renderSecurityAdminPanel()">Cancel</button><button onclick="updateSecurityCourse(${courseId})" style="background:#2c8c6e;">Update</button></div>
+    </div>`;
+}
+async function updateSecurityCourse(courseId) {
+    const data = {
+        title: document.getElementById('editSecTitle').value,
+        description: document.getElementById('editSecDesc').value,
+        video_url: document.getElementById('editSecVideo').value
+    };
+    const res = await fetch(`/api/security_courses/${courseId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (res.ok) { alert('Updated'); await loadSecurityData(); renderSecurityAdminPanel(); }
+    else alert('Error');
+}
+async function deleteSecurityCourse(courseId) {
+    if (!confirm('Delete this course?')) return;
+    const res = await fetch(`/api/security_courses/${courseId}`, { method: 'DELETE' });
+    if (res.ok) { alert('Deleted'); await loadSecurityData(); renderSecurityAdminPanel(); }
+    else alert('Error');
+}
+
+// ==================== SAFETY ADMIN PANEL ====================
+async function openSafetyAdminPanel() {
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can manage safety training'); return; }
+    await loadSafetyData();
+    renderSafetyAdminPanel();
+    openModalAndBringToFront('safetyAdminModal');
+}
+async function loadSafetyData() {
+    try {
+        const coursesRes = await fetch('/api/safety_courses');
+        window.safetyCourses = (await coursesRes.json()).courses || [];
+        const regRes = await fetch('/api/safety_registrations');
+        window.safetyRegistrations = (await regRes.json()).registrations || [];
+        const progRes = await fetch('/api/safety_progress');
+        window.safetyProgress = (await progRes.json()).progress || [];
+    } catch(e) { console.error(e); }
+}
+function renderSafetyAdminPanel() {
+    const container = document.getElementById('safetyAdminContent');
+    let html = '<h3>Safety Courses</h3><button onclick="showAddSafetyCourseForm()">+ Add Course</button>';
+    if (window.safetyCourses.length === 0) html += '<p>No courses.</p>';
+    else {
+        html += '<table style="width:100%;"><thead><tr><th>Title</th><th>Role</th><th>Pass Score</th><th>Expiry (days)</th><th>Actions</th></tr></thead><tbody>';
+        window.safetyCourses.forEach(c => {
+            html += `<tr><td>${escapeHtml(c.title)}</td><td>${c.role}</td><td>${c.pass_score}</td><td>${c.expiry_days}</td><td><button onclick="editSafetyCourse(${c.id})">Edit</button><button onclick="deleteSafetyCourse(${c.id})" style="background:#c0392b;">Delete</button></td></tr>`;
+        });
+        html += '</tbody></table>';
+    }
+    html += '<hr><h3>Registrations</h3>';
+    if (window.safetyRegistrations.length === 0) html += '<p>No registrations.</p>';
+    else {
+        html += '<table style="width:100%;"><thead><tr><th>Name</th><th>Worker ID</th><th>Phone</th><th>Email</th><th>Department</th><th>Registered</th></tr></thead><tbody>';
+        window.safetyRegistrations.forEach(r => {
+            html += `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.worker_id || '')}</td><td>${escapeHtml(r.phone)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.department || '')}</td><td>${new Date(r.registered_at).toLocaleString()}</td></tr>`;
+        });
+        html += '</tbody></table>';
+    }
+    html += '<hr><h3>Progress</h3>';
+    if (window.safetyProgress.length === 0) html += '<p>No progress.</p>';
+    else {
+        html += '<table style="width:100%;"><thead><tr><th>User</th><th>Course</th><th>Completed</th><th>Score</th><th>Expiry</th></tr></thead><tbody>';
+        window.safetyProgress.forEach(p => {
+            html += `<tr><td>${escapeHtml(p.user)}</td><td>${escapeHtml(p.course)}</td><td>${p.completed ? 'Yes' : 'No'}</td><td>${p.score}</td><td>${p.expiry ? new Date(p.expiry).toLocaleDateString() : 'N/A'}</td></tr>`;
+        });
+        html += '</tbody></table>';
+    }
+    container.innerHTML = html;
+}
+function showAddSafetyCourseForm() {
+    const container = document.getElementById('safetyAdminContent');
+    container.innerHTML = `<div><h3>Add Safety Course</h3>
+        <div class="form-group"><label>Title</label><input type="text" id="newSafeTitle"></div>
+        <div class="form-group"><label>Role (office/warehouse/all)</label><input type="text" id="newSafeRole" value="all"></div>
+        <div class="form-group"><label>Video URL</label><input type="url" id="newSafeVideo"></div>
+        <div class="form-group"><label>Pass Score (%)</label><input type="number" id="newSafePass" value="80"></div>
+        <div class="form-group"><label>Expiry Days</label><input type="number" id="newSafeExpiry" value="365"></div>
+        <div style="display:flex; gap:10px;"><button onclick="renderSafetyAdminPanel()">Cancel</button><button onclick="saveSafetyCourse()" style="background:#2c8c6e;">Save</button></div>
+    </div>`;
+}
+async function saveSafetyCourse() {
+    const data = {
+        title: document.getElementById('newSafeTitle').value,
+        role: document.getElementById('newSafeRole').value,
+        video_url: document.getElementById('newSafeVideo').value,
+        pass_score: parseInt(document.getElementById('newSafePass').value),
+        expiry_days: parseInt(document.getElementById('newSafeExpiry').value)
+    };
+    const res = await fetch('/api/safety_courses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (res.ok) { alert('Course added'); await loadSafetyData(); renderSafetyAdminPanel(); }
+    else alert('Error');
+}
+async function editSafetyCourse(courseId) {
+    const course = window.safetyCourses.find(c => c.id == courseId);
+    const container = document.getElementById('safetyAdminContent');
+    container.innerHTML = `<div><h3>Edit Safety Course</h3>
+        <div class="form-group"><label>Title</label><input type="text" id="editSafeTitle" value="${escapeHtml(course.title)}"></div>
+        <div class="form-group"><label>Role</label><input type="text" id="editSafeRole" value="${course.role}"></div>
+        <div class="form-group"><label>Video URL</label><input type="url" id="editSafeVideo" value="${course.video_url || ''}"></div>
+        <div class="form-group"><label>Pass Score</label><input type="number" id="editSafePass" value="${course.pass_score}"></div>
+        <div class="form-group"><label>Expiry Days</label><input type="number" id="editSafeExpiry" value="${course.expiry_days}"></div>
+        <div style="display:flex; gap:10px;"><button onclick="renderSafetyAdminPanel()">Cancel</button><button onclick="updateSafetyCourse(${courseId})" style="background:#2c8c6e;">Update</button></div>
+    </div>`;
+}
+async function updateSafetyCourse(courseId) {
+    const data = {
+        title: document.getElementById('editSafeTitle').value,
+        role: document.getElementById('editSafeRole').value,
+        video_url: document.getElementById('editSafeVideo').value,
+        pass_score: parseInt(document.getElementById('editSafePass').value),
+        expiry_days: parseInt(document.getElementById('editSafeExpiry').value)
+    };
+    const res = await fetch(`/api/safety_courses/${courseId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (res.ok) { alert('Updated'); await loadSafetyData(); renderSafetyAdminPanel(); }
+    else alert('Error');
+}
+async function deleteSafetyCourse(courseId) {
+    if (!confirm('Delete this course?')) return;
+    const res = await fetch(`/api/safety_courses/${courseId}`, { method: 'DELETE' });
+    if (res.ok) { alert('Deleted'); await loadSafetyData(); renderSafetyAdminPanel(); }
+    else alert('Error');
 }
 
 // ==================== PROJECTS ====================
@@ -505,14 +756,10 @@ async function loadProjects() {
     renderOverview();
     updateSiteDropdowns();
 }
-
 function renderActiveProjects() {
     const container = document.getElementById('activeProjectsContainer');
     const active = projects.filter(p => p.status === 'active');
-    if (active.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:40px;">No active projects.</p>';
-        return;
-    }
+    if (active.length === 0) { container.innerHTML = '<p style="text-align:center; padding:40px;">No active projects.</p>'; return; }
     container.innerHTML = active.map(proj => `
         <div class="project-card">
             <div class="project-name">${escapeHtml(proj.name)}</div>
@@ -530,14 +777,10 @@ function renderActiveProjects() {
         </div>
     `).join('');
 }
-
 function renderCompletedProjects() {
     const container = document.getElementById('completedProjectsContainer');
     const archived = projects.filter(p => p.status !== 'active');
-    if (archived.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:40px;">No completed/terminated projects.</p>';
-        return;
-    }
+    if (archived.length === 0) { container.innerHTML = '<p style="text-align:center; padding:40px;">No completed/terminated projects.</p>'; return; }
     container.innerHTML = archived.map(proj => `
         <div class="project-card ${proj.status === 'terminated' ? 'terminated-card' : 'completed-card'}">
             <div class="project-name">${escapeHtml(proj.name)}</div>
@@ -551,7 +794,6 @@ function renderCompletedProjects() {
         </div>
     `).join('');
 }
-
 function renderOverview() {
     const container = document.getElementById('overviewContent');
     if (!container) return;
@@ -559,10 +801,7 @@ function renderOverview() {
         let totalNetIncome = 0, totalExpenses = 0, totalTax = 0;
         projects.forEach(p => {
             const invHistory = p.invoiceHistory || [];
-            invHistory.forEach(inv => {
-                totalNetIncome += (inv.afterTax || inv.amount);
-                totalTax += (inv.taxAmount || 0);
-            });
+            invHistory.forEach(inv => { totalNetIncome += (inv.afterTax || inv.amount); totalTax += (inv.taxAmount || 0); });
             totalExpenses += (p.expenses || []).reduce((s, e) => s + (e.amt || 0), 0);
         });
         const netProfit = totalNetIncome - totalExpenses;
@@ -584,108 +823,93 @@ function renderOverview() {
                 const profit = netInc - exp;
                 const paid = p.manualTotalPaid || 0;
                 const balance = (p.agreedCost || 0) - paid;
-                return `<tr><td>${escapeHtml(p.name)}</td><td class="${profit>=0?'balance-positive':'balance-warning'}">${formatKES(profit)}</td><td class="${balance>0?'balance-warning':'balance-positive'}">${formatKES(balance)}</td></tr>`;
+                return `<tr><td>${escapeHtml(p.name)}</td><td>${p.status}</td><td>${formatKES(gross)}</td><td>${formatKES(tax)}</td><td>${formatKES(netInc)}</td><td>${formatKES(exp)}</td><td class="${profit>=0?'balance-positive':'balance-warning'}">${formatKES(profit)}</td><td class="${balance>0?'balance-warning':'balance-positive'}">${formatKES(balance)}</td></tr>`;
             }).join('')}
-            </tbody>}</div>
+            </tbody></table></div>
         `;
     } else {
         container.innerHTML = '<div class="restricted-access"><i class="fas fa-lock"></i><h3>Restricted Access</h3><p>Financial info only for Administrators.</p></div>';
     }
 }
-
 async function addNewProject() {
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') {
-        alert('Only administrators can add projects');
-        return;
-    }
-    const name = prompt("Project Name:");
-    if (!name) return;
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can add projects'); return; }
+    const name = prompt("Project Name:"); if (!name) return;
     const location = prompt("Location:") || "";
     const clientName = prompt("Client Name:") || "";
     const clientPhone = prompt("Client Phone:") || "";
     const startDate = prompt("Start Date (YYYY-MM-DD):") || "";
     const agreedCost = parseFloat(prompt("Agreed Contract Cost (KES):") || "0");
-    const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, location, clientName, clientPhone, startDate, agreedCost })
-    });
-    const data = await response.json();
-    if (data.success) {
-        await loadProjects();
-        alert('Project created successfully');
-    } else {
-        alert('Error creating project');
-    }
+    const response = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, location, clientName, clientPhone, startDate, agreedCost }) });
+    if (response.ok) { await loadProjects(); alert('Project created successfully'); } else { alert('Error creating project'); }
 }
-
 async function markAsCompleted(projectId) {
     const proj = projects.find(p => p.id === projectId);
-    if (proj && proj.status === 'active') {
-        proj.status = 'completed';
-        proj.completionDate = new Date().toISOString().split('T')[0];
-        proj.endDate = proj.completionDate;
-        await updateProject(proj);
-        await loadProjects();
-        alert('Marked as completed');
+    if (!proj) { alert("Project not found"); return; }
+    if (proj.status !== 'active') { alert("Only active projects can be marked as completed."); return; }
+    proj.status = 'completed';
+    proj.completionDate = new Date().toISOString().split('T')[0];
+    proj.endDate = proj.completionDate;
+    try {
+        const response = await fetch(`/api/projects/${proj.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(proj)
+        });
+        if (response.ok) {
+            await loadProjects();
+            alert('Project marked as completed');
+        } else {
+            const errorText = await response.text();
+            console.error("Update failed:", errorText);
+            alert('Failed to update project status. Check console.');
+        }
+    } catch (err) {
+        console.error("Network error:", err);
+        alert('Network error. See console.');
     }
 }
-
 async function terminateProject(projectId) {
-    if (!confirm('Terminate this project?')) return;
+    if (!confirm('Terminate this project? This will mark it as terminated.')) return;
     const proj = projects.find(p => p.id === projectId);
-    if (proj && proj.status === 'active') {
-        proj.status = 'terminated';
-        proj.completionDate = new Date().toISOString().split('T')[0];
-        await updateProject(proj);
-        await loadProjects();
-        alert('Project terminated');
+    if (!proj) { alert("Project not found"); return; }
+    if (proj.status !== 'active') { alert("Only active projects can be terminated."); return; }
+    proj.status = 'terminated';
+    proj.completionDate = new Date().toISOString().split('T')[0];
+    try {
+        const response = await fetch(`/api/projects/${proj.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(proj)
+        });
+        if (response.ok) {
+            await loadProjects();
+            alert('Project terminated');
+        } else {
+            const errorText = await response.text();
+            console.error("Update failed:", errorText);
+            alert('Failed to terminate project. Check console.');
+        }
+    } catch (err) {
+        console.error("Network error:", err);
+        alert('Network error. See console.');
     }
 }
-
 async function restoreToActive(projectId) {
     const proj = projects.find(p => p.id === projectId);
-    if (proj) {
-        proj.status = 'active';
-        proj.completionDate = null;
-        proj.endDate = '';
-        await updateProject(proj);
-        await loadProjects();
-        alert('Restored to active');
-    }
+    if (proj) { proj.status = 'active'; proj.completionDate = null; proj.endDate = ''; await updateProject(proj); await loadProjects(); alert('Restored to active'); }
 }
-
 async function restoreAllArchived() {
     if (!confirm('Restore all archived projects to active?')) return;
-    for (let p of projects) {
-        if (p.status !== 'active') {
-            p.status = 'active';
-            p.completionDate = null;
-            p.endDate = '';
-            await updateProject(p);
-        }
-    }
-    await loadProjects();
-    alert('All projects restored');
+    for (let p of projects) { if (p.status !== 'active') { p.status = 'active'; p.completionDate = null; p.endDate = ''; await updateProject(p); } }
+    await loadProjects(); alert('All projects restored');
 }
-
-async function updateProject(proj) {
-    const response = await fetch(`/api/projects/${proj.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(proj)
-    });
-    return response.json();
-}
+async function updateProject(proj) { return await fetch(`/api/projects/${proj.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(proj) }); }
 
 // ==================== PROJECT MODAL ====================
 function openProjectModal(projectId) {
     const proj = projects.find(p => p.id === projectId);
     if (!proj) return;
-    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin' && (!currentUser.assignedSiteIds || !currentUser.assignedSiteIds.includes(proj.id))) {
-        alert('Access denied');
-        return;
-    }
+    if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin' && (!currentUser.assignedSiteIds || !currentUser.assignedSiteIds.includes(proj.id))) { alert('Access denied'); return; }
     currentProjectId = projectId;
     document.getElementById('modalTitle').innerHTML = `${escapeHtml(proj.name)} <span class="status-badge status-${proj.status}">${proj.status.toUpperCase()}</span>`;
     const paid = proj.manualTotalPaid || 0;
@@ -706,7 +930,6 @@ function openProjectModal(projectId) {
         document.querySelectorAll('.modal-subtab[data-tab="generateInvoice"], .modal-subtab[data-tab="invoiceHistory"], .modal-subtab[data-tab="expensesIncome"]').forEach(t => t.style.display = 'inline-block');
     }
 }
-
 function refreshModalData(proj) {
     const isAdmin = (currentUser.role === 'system_admin' || currentUser.role === 'admin');
     const expenses = proj.expenses || [];
@@ -748,7 +971,6 @@ function refreshModalData(proj) {
     const notes = proj.siteNotes || [];
     document.getElementById('siteNotesListContainer').innerHTML = notes.map((note, idx) => `<div class="note-item"><div><strong>📅 ${escapeHtml(note.date)}</strong><br/>${escapeHtml(note.text)}</div><div><button onclick="printNote(${idx})">Print PDF</button></div></div>`).join('');
 }
-
 async function removeExpense(idx) { const proj = projects.find(p => p.id === currentProjectId); proj.expenses.splice(idx, 1); await updateProject(proj); await loadProjects(); refreshModalData(proj); }
 async function removeIncome(idx) { const proj = projects.find(p => p.id === currentProjectId); proj.incomes.splice(idx, 1); await updateProject(proj); await loadProjects(); refreshModalData(proj); }
 async function removeMaterial(idx) { const proj = projects.find(p => p.id === currentProjectId); proj.materials.splice(idx, 1); await updateProject(proj); await loadProjects(); refreshModalData(proj); }
@@ -763,13 +985,8 @@ async function addMaterial() {
     const proj = projects.find(p => p.id === currentProjectId);
     if (!proj.materials) proj.materials = [];
     proj.materials.push({ desc, qty, area, cost });
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-    document.getElementById('matDesc').value = '';
-    document.getElementById('matQty').value = '';
-    document.getElementById('matArea').value = '';
-    document.getElementById('matCost').value = '';
+    await updateProject(proj); await loadProjects(); refreshModalData(proj);
+    document.getElementById('matDesc').value = ''; document.getElementById('matQty').value = ''; document.getElementById('matArea').value = ''; document.getElementById('matCost').value = '';
     alert('Material added');
 }
 async function addWorker() {
@@ -794,22 +1011,13 @@ async function addWorker() {
     const proj = projects.find(p => p.id === currentProjectId);
     if (!proj.workers) proj.workers = [];
     proj.workers.push({ name, idNumber, phone, date, jobTitle, workType, days, wagePerDay, payePercent, nssfAmount, nhifAmount, advance, workerType });
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-    document.getElementById('workerName').value = '';
-    document.getElementById('workerIdNumber').value = '';
-    document.getElementById('workerPhone').value = '';
-    document.getElementById('workerDate').value = '';
-    document.getElementById('workerJobTitle').value = '';
-    document.getElementById('workType').value = '';
+    await updateProject(proj); await loadProjects(); refreshModalData(proj);
+    document.getElementById('workerName').value = ''; document.getElementById('workerIdNumber').value = ''; document.getElementById('workerPhone').value = '';
+    document.getElementById('workerDate').value = ''; document.getElementById('workerJobTitle').value = ''; document.getElementById('workType').value = '';
     document.getElementById('daysWorked').value = '';
     if (currentUser.role === 'system_admin' || currentUser.role === 'admin') {
-        document.getElementById('wagePerDay').value = '';
-        document.getElementById('payePercent').value = '0';
-        document.getElementById('nssfAmount').value = '0';
-        document.getElementById('nhifAmount').value = '0';
-        document.getElementById('advanceGiven').value = '0';
+        document.getElementById('wagePerDay').value = ''; document.getElementById('payePercent').value = '0'; document.getElementById('nssfAmount').value = '0';
+        document.getElementById('nhifAmount').value = '0'; document.getElementById('advanceGiven').value = '0';
     }
     alert('Worker added');
 }
@@ -821,11 +1029,8 @@ async function addExpenseManual() {
     const proj = projects.find(p => p.id === currentProjectId);
     if (!proj.expenses) proj.expenses = [];
     proj.expenses.push({ desc, amt, manual: true, date: new Date().toISOString() });
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-    document.getElementById('expDesc').value = '';
-    document.getElementById('expAmount').value = '';
+    await updateProject(proj); await loadProjects(); refreshModalData(proj);
+    document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = '';
     alert('Expense added');
 }
 async function addIncomeManual() {
@@ -836,11 +1041,8 @@ async function addIncomeManual() {
     const proj = projects.find(p => p.id === currentProjectId);
     if (!proj.incomes) proj.incomes = [];
     proj.incomes.push({ desc, amt, manual: true, date: new Date().toISOString() });
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-    document.getElementById('incDesc').value = '';
-    document.getElementById('incAmount').value = '';
+    await updateProject(proj); await loadProjects(); refreshModalData(proj);
+    document.getElementById('incDesc').value = ''; document.getElementById('incAmount').value = '';
     alert('Income recorded');
 }
 async function addSiteNote() {
@@ -849,9 +1051,7 @@ async function addSiteNote() {
     const proj = projects.find(p => p.id === currentProjectId);
     if (!proj.siteNotes) proj.siteNotes = [];
     proj.siteNotes.unshift({ id: Date.now(), text: txt, date: new Date().toLocaleString() });
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
+    await updateProject(proj); await loadProjects(); refreshModalData(proj);
     document.getElementById('siteNoteContent').value = '';
     alert('Note added');
 }
@@ -859,7 +1059,8 @@ function printNote(idx) {
     const proj = projects.find(p => p.id === currentProjectId);
     const note = proj.siteNotes[idx];
     const printDiv = document.createElement('div');
-    printDiv.innerHTML = `<div style="padding:25.4mm"><h3>Site Note: ${escapeHtml(proj.name)}</h3><p><strong>Date:</strong> ${note.date}</p><hr/><p>${escapeHtml(note.text)}</p></div>`;
+    printDiv.style.padding = '25.4mm';
+    printDiv.innerHTML = `<h3>Site Note: ${escapeHtml(proj.name)}</h3><p><strong>Date:</strong> ${note.date}</p><hr/><p>${escapeHtml(note.text)}</p>`;
     document.body.appendChild(printDiv);
     html2pdf().from(printDiv).set({ margin: 0, filename: `Note_${proj.name.replace(/\s/g, '_')}.pdf` }).save().then(() => document.body.removeChild(printDiv));
 }
@@ -898,7 +1099,8 @@ function printWorkerDetail() {
     if (!window.currentWorkerPrint) return;
     const { proj, w, totalWages, payeAmt, nssf, nhif, advance, balance } = window.currentWorkerPrint;
     const printDiv = document.createElement('div');
-    printDiv.innerHTML = `<div style="padding:25.4mm"><h3>Worker Details</h3><p><strong>Name:</strong> ${escapeHtml(w.name)}</p><p><strong>ID:</strong> ${escapeHtml(w.idNumber || 'N/A')}</p><p><strong>Phone:</strong> ${escapeHtml(w.phone || 'N/A')}</p><p><strong>Job Title:</strong> ${escapeHtml(w.jobTitle || 'N/A')}</p><p><strong>Work Type:</strong> ${escapeHtml(w.workType || 'N/A')}</p><p><strong>Days:</strong> ${w.days}</p><p><strong>Total Wages:</strong> ${formatKES(totalWages)}</p><p><strong>Balance:</strong> ${formatKES(balance)}</p><hr><p><strong>Site:</strong> ${escapeHtml(proj.name)}</p></div>`;
+    printDiv.style.padding = '25.4mm';
+    printDiv.innerHTML = `<h3>Worker Details</h3><p><strong>Name:</strong> ${escapeHtml(w.name)}</p><p><strong>ID:</strong> ${escapeHtml(w.idNumber || 'N/A')}</p><p><strong>Phone:</strong> ${escapeHtml(w.phone || 'N/A')}</p><p><strong>Job Title:</strong> ${escapeHtml(w.jobTitle || 'N/A')}</p><p><strong>Work Type:</strong> ${escapeHtml(w.workType || 'N/A')}</p><p><strong>Days:</strong> ${w.days}</p><p><strong>Total Wages:</strong> ${formatKES(totalWages)}</p><p><strong>Balance:</strong> ${formatKES(balance)}</p><hr><p><strong>Site:</strong> ${escapeHtml(proj.name)}</p>`;
     document.body.appendChild(printDiv);
     html2pdf().from(printDiv).set({ margin: 0, filename: `Worker_${w.name.replace(/\s/g, '_')}.pdf` }).save().then(() => document.body.removeChild(printDiv));
 }
@@ -942,11 +1144,8 @@ async function saveEditedWorker() {
     w.nhifAmount = parseFloat(document.getElementById('editNhifAmount').value) || 0;
     w.advance = parseFloat(document.getElementById('editAdvanceGiven').value) || 0;
     w.workerType = document.getElementById('editWorkerType').value;
-    await updateProject(proj);
-    await loadProjects();
-    refreshModalData(proj);
-    closeModalById('editWorkerModal');
-    alert('Worker updated');
+    await updateProject(proj); await loadProjects(); refreshModalData(proj);
+    closeModalById('editWorkerModal'); alert('Worker updated');
 }
 // ==================== INVOICES ====================
 function openInvoiceModal(projectId) {
@@ -1010,7 +1209,24 @@ async function generateInvoicePDF() {
     await loadProjects();
     refreshInvoiceHistoryDisplay(proj);
     const printDiv = document.createElement('div');
-    printDiv.innerHTML = `<div style="padding:25.4mm"><h2>TAX INVOICE</h2><p><strong>Invoice:</strong> ${invoiceNumber}</p><p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p><p><strong>Due:</strong> ${dueDate}</p><p><strong>Client:</strong> ${escapeHtml(proj.clientName)}</p><p><strong>Project:</strong> ${escapeHtml(proj.name)}</p><table border="1" cellpadding="5"><tr><th>Description</th><th>Amount (KES)</th></tr><tr><td>${escapeHtml(description)}</td><td>${invoiceAmount.toLocaleString()}</td></tr><tr><td>Tax (${taxRate}%)</td><td>${taxAmount.toLocaleString()}</td></tr><tr><td><strong>Total Payable</strong></td><td><strong>${afterTax.toLocaleString()}</strong></td></tr></table><p>Contract: ${formatKES(proj.agreedCost)} | Paid: ${formatKES(totalPaid)} | This Invoice: ${formatKES(invoiceAmount)} | Balance: ${formatKES(Math.max(0, remainingBalance))}</p></div>`;
+    printDiv.style.padding = '25.4mm';
+    printDiv.innerHTML = `
+        <h2 style="text-align:center;">TAX INVOICE</h2>
+        <p><strong>Invoice:</strong> ${invoiceNumber}</p>
+        <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        <p><strong>Due:</strong> ${dueDate}</p>
+        <p><strong>Client:</strong> ${escapeHtml(proj.clientName)}</p>
+        <p><strong>Project:</strong> ${escapeHtml(proj.name)}</p>
+        <table border="1" cellpadding="5" style="width:100%; border-collapse:collapse;">
+            <thead><tr><th>Description</th><th>Amount (KES)</th></tr></thead>
+            <tbody>
+                <tr><td>${escapeHtml(description)}</td><td>${invoiceAmount.toLocaleString()}</td></tr>
+                <tr><td>Tax (${taxRate}%)</td><td>${taxAmount.toLocaleString()}</td></tr>
+                <tr><td><strong>Total Payable</strong></td><td><strong>${afterTax.toLocaleString()}</strong></td></tr>
+            </tbody>
+        </table>
+        <p>Contract: ${formatKES(proj.agreedCost)} | Paid: ${formatKES(totalPaid)} | This Invoice: ${formatKES(invoiceAmount)} | Balance: ${formatKES(Math.max(0, remainingBalance))}</p>
+    `;
     document.body.appendChild(printDiv);
     html2pdf().from(printDiv).set({ margin: 0, filename: `Invoice_${proj.name.replace(/\s/g, '_')}_${invoiceNumber}.pdf` }).save().then(() => document.body.removeChild(printDiv));
     closeModalById('invoiceModal');
@@ -1029,11 +1245,8 @@ async function loadCompanySettings() {
     const data = await response.json();
     document.getElementById('companyNameSpan').innerText = data.name || 'Your Company';
     document.getElementById('companyDetailsDisplay').innerHTML = data.tagline || 'Construction & Electrical';
-    // Update the contact info line (without company name)
     const contactDiv = document.getElementById('companyContactInfo');
-    if (contactDiv) {
-        contactDiv.innerHTML = `${data.address || ''} | ${data.poBox || ''} | Tel: ${data.phone || ''} | Email: ${data.email || ''}`;
-    }
+    if (contactDiv) contactDiv.innerHTML = `${data.address || ''} | ${data.poBox || ''} | Tel: ${data.phone || ''} | Email: ${data.email || ''}`;
     if (data.logoData) {
         document.getElementById('companyLogoImg').src = data.logoData;
         document.getElementById('companyLogoImg').style.display = 'block';
@@ -1087,18 +1300,8 @@ async function saveCompanySettings() {
         logoData: companyLogoData,
         wallpaperData: wallpaperData
     };
-    const response = await fetch('/api/company_settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
-    });
-    if (response.ok) {
-        await loadCompanySettings();
-        alert('Settings saved');
-        closeModalById('companySettingsModal');
-    } else {
-        alert('Error saving settings');
-    }
+    const response = await fetch('/api/company_settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
+    if (response.ok) { await loadCompanySettings(); alert('Settings saved'); closeModalById('companySettingsModal'); } else { alert('Error saving settings'); }
 }
 function uploadSettingsLogo() {
     const file = document.getElementById('settingsLogoUpload').files[0];
@@ -1115,13 +1318,7 @@ function uploadSettingsLogo() {
     };
     reader.readAsDataURL(file);
 }
-function removeSettingsLogo() {
-    companyLogoData = null;
-    document.getElementById('companyLogoImg').style.display = 'none';
-    document.getElementById('companyLogoPlaceholder').style.display = 'flex';
-    document.getElementById('settingsLogoImg').style.display = 'none';
-    document.getElementById('settingsLogoPlaceholder').style.display = 'flex';
-}
+function removeSettingsLogo() { companyLogoData = null; document.getElementById('companyLogoImg').style.display = 'none'; document.getElementById('companyLogoPlaceholder').style.display = 'flex'; document.getElementById('settingsLogoImg').style.display = 'none'; document.getElementById('settingsLogoPlaceholder').style.display = 'flex'; }
 function uploadSettingsWallpaper() {
     const file = document.getElementById('settingsWallpaperUpload').files[0];
     if (!file) return;
@@ -1134,12 +1331,7 @@ function uploadSettingsWallpaper() {
     };
     reader.readAsDataURL(file);
 }
-function removeSettingsWallpaper() {
-    wallpaperData = null;
-    document.getElementById('loginModal').style.background = 'rgba(0,0,0,0.75)';
-    document.getElementById('wallpaperPreview').style.backgroundImage = '';
-    document.getElementById('wallpaperPreview').style.display = 'none';
-}
+function removeSettingsWallpaper() { wallpaperData = null; document.getElementById('loginModal').style.background = 'rgba(0,0,0,0.75)'; document.getElementById('wallpaperPreview').style.backgroundImage = ''; document.getElementById('wallpaperPreview').style.display = 'none'; }
 // ==================== USER MANAGEMENT ====================
 async function openUserManagement() {
     if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can access user management'); return; }
@@ -1181,16 +1373,8 @@ async function editForemanSites(userId) {
 async function saveForemanSites() {
     const select = document.getElementById('editSiteSelect');
     const selectedIds = Array.from(select.selectedOptions).map(opt => opt.value);
-    const response = await fetch(`/api/users/${window.editForemanUserId}/sites`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignedSiteIds: selectedIds })
-    });
-    if (response.ok) {
-        alert('Foreman sites updated');
-        closeModalById('editForemanSitesModal');
-        await loadUsersList();
-    } else { alert('Error updating sites'); }
+    const response = await fetch(`/api/users/${window.editForemanUserId}/sites`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ assignedSiteIds: selectedIds }) });
+    if (response.ok) { alert('Foreman sites updated'); closeModalById('editForemanSitesModal'); await loadUsersList(); } else { alert('Error updating sites'); }
 }
 async function changePassword() {
     const currentPwd = document.getElementById('changeCurrentPwd').value;
@@ -1198,22 +1382,10 @@ async function changePassword() {
     const confirmPwd = document.getElementById('changeConfirmPwd').value;
     if (newPwd !== confirmPwd) { document.getElementById('pwdChangeMsg').innerText = 'New passwords do not match'; document.getElementById('pwdChangeMsg').style.display = 'block'; return; }
     if (newPwd.length < 4) { document.getElementById('pwdChangeMsg').innerText = 'Password must be at least 4 characters'; document.getElementById('pwdChangeMsg').style.display = 'block'; return; }
-    const response = await fetch('/api/change_password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd })
-    });
+    const response = await fetch('/api/change_password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd }) });
     const data = await response.json();
-    if (data.success) {
-        alert('Password changed successfully');
-        document.getElementById('changeCurrentPwd').value = '';
-        document.getElementById('changeNewPwd').value = '';
-        document.getElementById('changeConfirmPwd').value = '';
-        document.getElementById('pwdChangeMsg').style.display = 'none';
-    } else {
-        document.getElementById('pwdChangeMsg').innerText = data.error;
-        document.getElementById('pwdChangeMsg').style.display = 'block';
-    }
+    if (data.success) { alert('Password changed successfully'); document.getElementById('changeCurrentPwd').value = ''; document.getElementById('changeNewPwd').value = ''; document.getElementById('changeConfirmPwd').value = ''; document.getElementById('pwdChangeMsg').style.display = 'none'; }
+    else { document.getElementById('pwdChangeMsg').innerText = data.error; document.getElementById('pwdChangeMsg').style.display = 'block'; }
 }
 async function updateAdminCredentials() {
     if (currentUser.role !== 'system_admin') return;
@@ -1221,18 +1393,9 @@ async function updateAdminCredentials() {
     const newPassword = document.getElementById('adminNewPassword').value;
     const confirm = document.getElementById('adminConfirmPassword').value;
     if (newPassword && newPassword !== confirm) { document.getElementById('adminUpdateMsg').innerText = 'Passwords do not match'; document.getElementById('adminUpdateMsg').style.display = 'block'; return; }
-    const response = await fetch('/api/update_admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, newPassword })
-    });
-    if (response.ok) {
-        alert('Admin credentials updated');
-        document.getElementById('adminUpdateMsg').innerText = 'Updated successfully';
-        document.getElementById('adminUpdateMsg').style.display = 'block';
-        setTimeout(() => document.getElementById('adminUpdateMsg').style.display = 'none', 3000);
-        if (username) currentUser.username = username;
-    } else { alert('Error updating admin'); }
+    const response = await fetch('/api/update_admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, newPassword }) });
+    if (response.ok) { alert('Admin credentials updated'); document.getElementById('adminUpdateMsg').innerText = 'Updated successfully'; document.getElementById('adminUpdateMsg').style.display = 'block'; setTimeout(() => document.getElementById('adminUpdateMsg').style.display = 'none', 3000); if (username) currentUser.username = username; }
+    else { alert('Error updating admin'); }
 }
 // ==================== PENDING ADMIN REQUESTS ====================
 async function loadPendingRequests() {
@@ -1242,40 +1405,17 @@ async function loadPendingRequests() {
     pendingAdminRequests = data.requests || [];
     const container = document.getElementById('pendingRequestsList');
     if (pendingAdminRequests.length === 0) { container.innerHTML = '<p>No pending requests</p>'; return; }
-    container.innerHTML = pendingAdminRequests.map((req, idx) => `
-        <div class="pending-request-item">
-            <strong>${escapeHtml(req.fullName)}</strong> (@${escapeHtml(req.username)})<br>
-            Requested: ${new Date(req.timestamp * 1000).toLocaleString()}<br>
-            Expires: ${new Date(req.expiresAt * 1000).toLocaleString()}<br>
-            <button class="approve-btn" onclick="approveAdminRequest('${req.id}')">Approve</button>
-            <button class="reject-btn" onclick="rejectAdminRequest('${req.id}')">Reject</button>
-        </div>
-    `).join('');
+    container.innerHTML = pendingAdminRequests.map((req, idx) => `<div class="pending-request-item"><strong>${escapeHtml(req.fullName)}</strong> (@${escapeHtml(req.username)})<br>Requested: ${new Date(req.timestamp * 1000).toLocaleString()}<br>Expires: ${new Date(req.expiresAt * 1000).toLocaleString()}<br><button class="approve-btn" onclick="approveAdminRequest('${req.id}')">Approve</button><button class="reject-btn" onclick="rejectAdminRequest('${req.id}')">Reject</button></div>`).join('');
 }
-async function approveAdminRequest(requestId) {
-    const response = await fetch(`/api/pending_requests/${requestId}/approve`, { method: 'POST' });
-    if (response.ok) { await loadPendingRequests(); await loadUsersList(); alert('Admin approved'); } else { alert('Error approving'); }
-}
-async function rejectAdminRequest(requestId) {
-    const response = await fetch(`/api/pending_requests/${requestId}/reject`, { method: 'DELETE' });
-    if (response.ok) { await loadPendingRequests(); alert('Request rejected'); } else { alert('Error rejecting'); }
-}
+async function approveAdminRequest(requestId) { const res = await fetch(`/api/pending_requests/${requestId}/approve`, { method: 'POST' }); if (res.ok) { await loadPendingRequests(); await loadUsersList(); alert('Admin approved'); } else { alert('Error approving'); } }
+async function rejectAdminRequest(requestId) { const res = await fetch(`/api/pending_requests/${requestId}/reject`, { method: 'DELETE' }); if (res.ok) { await loadPendingRequests(); alert('Request rejected'); } else { alert('Error rejecting'); } }
 // ==================== JOBS & SUGGESTIONS ====================
 async function loadJobs() { const response = await fetch('/api/jobs'); const data = await response.json(); window.jobs = data.jobs || []; }
 function renderJobBoard() {
     const container = document.getElementById('jobBoardContainer');
     if (!container) return;
     if (!window.jobs || window.jobs.length === 0) { container.innerHTML = '<p>No job postings</p>'; return; }
-    container.innerHTML = window.jobs.map((job, idx) => `
-        <div class="job-card">
-            <h3>${escapeHtml(job.title)}</h3>
-            <p><strong>Location:</strong> ${escapeHtml(job.location)}</p>
-            <p>${escapeHtml(job.description)}</p>
-            <p><strong>Contact:</strong> ${escapeHtml(job.contact)}</p>
-            <p><small>Posted: ${new Date(job.date).toLocaleDateString()}</small></p>
-            ${(currentUser && (currentUser.role === 'system_admin' || currentUser.role === 'admin')) ? `<button onclick="deleteJob(${job.id})">Delete Job</button>` : ''}
-        </div>
-    `).join('');
+    container.innerHTML = window.jobs.map((job, idx) => `<div class="job-card"><h3>${escapeHtml(job.title)}</h3><p><strong>Location:</strong> ${escapeHtml(job.location)}</p><p>${escapeHtml(job.description)}</p><p><strong>Contact:</strong> ${escapeHtml(job.contact)}</p><p><small>Posted: ${new Date(job.date).toLocaleDateString()}</small></p>${(currentUser && (currentUser.role === 'system_admin' || currentUser.role === 'admin')) ? `<button onclick="deleteJob(${job.id})">Delete Job</button>` : ''}</div>`).join('');
 }
 async function postJob() {
     if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can post jobs'); return; }
@@ -1293,13 +1433,7 @@ function renderSuggestions() {
     const container = document.getElementById('suggestionsContainer');
     if (!container) return;
     if (!window.suggestions || window.suggestions.length === 0) { container.innerHTML = '<p>No suggestions yet</p>'; return; }
-    container.innerHTML = window.suggestions.map((sug, idx) => `
-        <div class="suggestion-card">
-            <p><strong>${escapeHtml(sug.name || 'Anonymous')}</strong> - ${new Date(sug.date).toLocaleString()}</p>
-            <p>${escapeHtml(sug.text)}</p>
-            ${(currentUser && (currentUser.role === 'system_admin' || currentUser.role === 'admin')) ? `<button onclick="deleteSuggestion(${sug.id})">Delete</button>` : ''}
-        </div>
-    `).join('');
+    container.innerHTML = window.suggestions.map((sug, idx) => `<div class="suggestion-card"><p><strong>${escapeHtml(sug.name || 'Anonymous')}</strong> - ${new Date(sug.date).toLocaleString()}</p><p>${escapeHtml(sug.text)}</p>${(currentUser && (currentUser.role === 'system_admin' || currentUser.role === 'admin')) ? `<button onclick="deleteSuggestion(${sug.id})">Delete</button>` : ''}</div>`).join('');
 }
 async function submitSuggestion() {
     const name = document.getElementById('suggestionName').value.trim();
@@ -1313,15 +1447,7 @@ function renderPublicJobBoard() {
     const container = document.getElementById('publicJobBoardList');
     if (!container) return;
     if (!window.jobs || window.jobs.length === 0) { container.innerHTML = '<p>No job openings at the moment</p>'; return; }
-    container.innerHTML = window.jobs.map(job => `
-        <div class="public-job-card">
-            <h3>${escapeHtml(job.title)}</h3>
-            <p><strong>Location:</strong> ${escapeHtml(job.location)}</p>
-            <p>${escapeHtml(job.description)}</p>
-            <p><strong>Contact:</strong> ${escapeHtml(job.contact)}</p>
-            <p><small>Posted: ${new Date(job.date).toLocaleDateString()}</small></p>
-        </div>
-    `).join('');
+    container.innerHTML = window.jobs.map(job => `<div class="public-job-card"><h3>${escapeHtml(job.title)}</h3><p><strong>Location:</strong> ${escapeHtml(job.location)}</p><p>${escapeHtml(job.description)}</p><p><strong>Contact:</strong> ${escapeHtml(job.contact)}</p><p><small>Posted: ${new Date(job.date).toLocaleDateString()}</small></p></div>`).join('');
 }
 // ==================== RECOMMENDATION LETTER ====================
 function toggleRecPersonFields() {
@@ -1336,9 +1462,7 @@ function updateWorkerSelectForRecommendation() {
     const workerSelect = document.getElementById('recWorkerSelect');
     if (proj && proj.workers && proj.workers.length) {
         workerSelect.innerHTML = '<option value="">-- Select Worker --</option>' + proj.workers.map((w, idx) => `<option value="${idx}">${escapeHtml(w.name)} (${w.jobTitle || w.workType || 'General'})</option>`).join('');
-    } else {
-        workerSelect.innerHTML = '<option value="">No workers available</option>';
-    }
+    } else { workerSelect.innerHTML = '<option value="">No workers available</option>'; }
 }
 function autoFillRecommendation() {
     const type = document.getElementById('recPersonType').value;
@@ -1399,22 +1523,18 @@ async function generateRecommendationPDF() {
     const companyName = document.getElementById('companyNameSpan').innerText;
     const currentDate = new Date().toLocaleDateString('en-GB');
     const printDiv = document.createElement('div');
+    printDiv.style.padding = '25.4mm';
+    printDiv.style.fontFamily = "'Times New Roman', serif";
     printDiv.innerHTML = `
-        <div style="padding:25.4mm; font-family:'Times New Roman', serif;">
-            <div style="text-align:center; margin-bottom:8mm;">
-                <h1>${escapeHtml(companyName)}</h1>
-                <p>${escapeHtml(document.getElementById('companyDetailsDisplay').innerText)}</p>
-                <hr>
-            </div>
-            <p><strong>Date:</strong> ${currentDate}</p>
-            <p>To Whom It May Concern</p>
-            <p><strong>RE: LETTER OF RECOMMENDATION - ${escapeHtml(personName).toUpperCase()}</strong></p>
-            <p>This is to confirm that ${escapeHtml(personName)}${idNumberDisplay} was employed with ${escapeHtml(companyName)} as ${escapeHtml(jobTitle)} from ${startFormatted} to ${endFormatted}.</p>
-            <p>${escapeHtml(userSummary)}</p>
-            <p>Based on his performance and conduct, we recommend ${personName.split(' ')[0]} wholeheartedly for any future opportunities.</p>
-            <p>Yours faithfully,</p>
-            <div style="margin-top:10mm;"><strong>${escapeHtml(currentUser.fullName)}</strong><br>Administration Manager</div>
-        </div>
+        <div style="text-align:center; margin-bottom:8mm;"><h1>${escapeHtml(companyName)}</h1><p>${escapeHtml(document.getElementById('companyDetailsDisplay').innerText)}</p><hr></div>
+        <p><strong>Date:</strong> ${currentDate}</p>
+        <p>To Whom It May Concern</p>
+        <p><strong>RE: LETTER OF RECOMMENDATION - ${escapeHtml(personName).toUpperCase()}</strong></p>
+        <p>This is to confirm that ${escapeHtml(personName)}${idNumberDisplay} was employed with ${escapeHtml(companyName)} as ${escapeHtml(jobTitle)} from ${startFormatted} to ${endFormatted}.</p>
+        <p>${escapeHtml(userSummary)}</p>
+        <p>Based on his performance and conduct, we recommend ${personName.split(' ')[0]} wholeheartedly for any future opportunities.</p>
+        <p>Yours faithfully,</p>
+        <div style="margin-top:10mm;"><strong>${escapeHtml(currentUser.fullName)}</strong><br>Administration Manager</div>
     `;
     document.body.appendChild(printDiv);
     html2pdf().from(printDiv).set({ margin: 0, filename: `Recommendation_${personName.replace(/\s/g, '_')}.pdf` }).save().then(() => document.body.removeChild(printDiv));
@@ -1426,11 +1546,7 @@ async function exportData() {
     const data = await response.json();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `erp_backup_${new Date().toISOString().slice(0,19)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement('a'); a.href = url; a.download = `erp_backup_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(url);
     alert('Data exported');
 }
 function exportToCSV() {
@@ -1438,11 +1554,7 @@ function exportToCSV() {
     projects.forEach(p => { csv += `${p.id},${p.name},${p.location || ''},${p.clientName || ''},${p.status},${p.agreedCost}\n`; });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `projects_${new Date().toISOString().slice(0,19)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement('a'); a.href = url; a.download = `projects_${new Date().toISOString().slice(0,19)}.csv`; a.click(); URL.revokeObjectURL(url);
     alert('CSV exported');
 }
 document.getElementById('importFileInput').addEventListener('change', async (e) => {
@@ -1460,13 +1572,7 @@ document.getElementById('importFileInput').addEventListener('change', async (e) 
 });
 document.getElementById('csvImportFile').addEventListener('change', (e) => { alert('CSV import not implemented in demo, but backend supports it'); });
 // ==================== DELETE SITES ====================
-function promptDeleteSitePassword() {
-    if (currentUser.role !== 'system_admin') { alert('Only System Admin can delete sites'); return; }
-    deleteSiteAccessGranted = false;
-    document.getElementById('deleteSitePassword').value = '';
-    document.getElementById('passwordError').style.display = 'none';
-    openModalAndBringToFront('passwordPromptModal');
-}
+function promptDeleteSitePassword() { if (currentUser.role !== 'system_admin') { alert('Only System Admin can delete sites'); return; } deleteSiteAccessGranted = false; document.getElementById('deleteSitePassword').value = ''; document.getElementById('passwordError').style.display = 'none'; openModalAndBringToFront('passwordPromptModal'); }
 function closePasswordPrompt() { closeModalById('passwordPromptModal'); }
 async function verifyDeleteSitePassword() { deleteSiteAccessGranted = true; closePasswordPrompt(); switchPanel('deleteSitePanel'); renderDeleteSitesList(); }
 function renderDeleteSitesList() {
@@ -1545,24 +1651,10 @@ async function attemptSignup() {
     if (!fullName || !username || !password || !securityKey) { document.getElementById('signupError').innerText = 'All fields required'; document.getElementById('signupError').style.display = 'block'; return; }
     if (password !== confirm) { document.getElementById('signupError').innerText = 'Passwords do not match'; document.getElementById('signupError').style.display = 'block'; return; }
     if (password.length < 4) { document.getElementById('signupError').innerText = 'Password must be at least 4 characters'; document.getElementById('signupError').style.display = 'block'; return; }
-    const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName, username, password, securityKey, role, assignedSiteIds })
-    });
+    const response = await fetch('/api/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName, username, password, securityKey, role, assignedSiteIds }) });
     const data = await response.json();
-    if (data.success) {
-        alert(data.message);
-        showLoginTab('login');
-        document.getElementById('signupName').value = '';
-        document.getElementById('signupUsername').value = '';
-        document.getElementById('signupPassword').value = '';
-        document.getElementById('signupConfirmPassword').value = '';
-        document.getElementById('signupSecurityKey').value = '';
-    } else {
-        document.getElementById('signupError').innerText = data.error;
-        document.getElementById('signupError').style.display = 'block';
-    }
+    if (data.success) { alert(data.message); showLoginTab('login'); document.getElementById('signupName').value = ''; document.getElementById('signupUsername').value = ''; document.getElementById('signupPassword').value = ''; document.getElementById('signupConfirmPassword').value = ''; document.getElementById('signupSecurityKey').value = ''; }
+    else { document.getElementById('signupError').innerText = data.error; document.getElementById('signupError').style.display = 'block'; }
 }
 async function resetForgottenPassword() {
     const username = document.getElementById('forgotUsername').value.trim().toLowerCase();
@@ -1571,37 +1663,13 @@ async function resetForgottenPassword() {
     const confirm = document.getElementById('forgotConfirmPassword').value;
     if (newPassword !== confirm) { document.getElementById('forgotError').innerText = 'Passwords do not match'; document.getElementById('forgotError').style.display = 'block'; return; }
     if (newPassword.length < 4) { document.getElementById('forgotError').innerText = 'Password must be at least 4 characters'; document.getElementById('forgotError').style.display = 'block'; return; }
-    const response = await fetch('/api/reset_password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, securityKey, newPassword })
-    });
+    const response = await fetch('/api/reset_password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, securityKey, newPassword }) });
     const data = await response.json();
-    if (data.success) {
-        document.getElementById('forgotSuccess').innerText = data.message;
-        document.getElementById('forgotSuccess').style.display = 'block';
-        setTimeout(() => showLoginTab('login'), 2000);
-    } else {
-        document.getElementById('forgotError').innerText = data.error;
-        document.getElementById('forgotError').style.display = 'block';
-    }
-}
-function closeModalById(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.style.display = 'none';
-}
-function openModalAndBringToFront(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'block';
-        bringToFront(modal);
-    }
+    if (data.success) { document.getElementById('forgotSuccess').innerText = data.message; document.getElementById('forgotSuccess').style.display = 'block'; setTimeout(() => showLoginTab('login'), 2000); }
+    else { document.getElementById('forgotError').innerText = data.error; document.getElementById('forgotError').style.display = 'block'; }
 }
 function attachModalTabHandlers() {
-    document.querySelectorAll('.modal-subtab').forEach(btn => {
-        btn.removeEventListener('click', modalTabHandler);
-        btn.addEventListener('click', modalTabHandler);
-    });
+    document.querySelectorAll('.modal-subtab').forEach(btn => { btn.removeEventListener('click', modalTabHandler); btn.addEventListener('click', modalTabHandler); });
 }
 function modalTabHandler(e) {
     const tabName = e.currentTarget.getAttribute('data-tab');

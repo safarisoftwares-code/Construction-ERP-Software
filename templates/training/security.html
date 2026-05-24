@@ -9,12 +9,24 @@
         .course { border-bottom: 1px solid #eee; padding: 15px 0; }
         .completed { color: green; }
         button { background: #1f6e6c; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; }
+        .form-group { margin: 10px 0; }
+        label { display: inline-block; width: 100px; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1><i class="fas fa-shield-alt"></i> Security Training</h1>
     <a href="/">← Back to Main Site</a>
+    <form method="POST" action="/training/security/register" style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:20px;">
+        <h3>Register for Security Training</h3>
+        <div class="form-group"><label>Full Name:</label> <input type="text" name="name" required></div>
+        <div class="form-group"><label>Worker ID:</label> <input type="text" name="worker_id" required></div>
+        <div class="form-group"><label>Phone:</label> <input type="tel" name="phone" required></div>
+        <div class="form-group"><label>Email:</label> <input type="email" name="email" required></div>
+        <div class="form-group"><label>Department:</label> <input type="text" name="department"></div>
+        <button type="submit">Register</button>
+    </form>
+    <hr>
     {% for course in courses %}
     <div class="course">
         <h3>{{ course.title }}</h3>
