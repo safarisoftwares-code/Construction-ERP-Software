@@ -124,6 +124,36 @@
         .status-approved { color: #27ae60; }
         .status-rejected { color: #e74c3c; }
         @media (max-width: 700px) { .panel { padding: 16px; } .card-buttons { flex-direction: column; } .company-text h1 { font-size: 1rem; } .footer-line { font-size: 0.7rem; } }
+        /* Chatbot widget – lowered z-index to avoid hiding modals */
+        #chatButton { z-index: 1000 !important; }
+        #chatModal {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 380px;
+            max-width: calc(100% - 40px);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 1001 !important;
+            display: none;
+            flex-direction: column;
+        }
+        .chat-message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        .chat-message.bot {
+            background: #e2e8f0;
+            align-self: flex-start;
+        }
+        .chat-message.user {
+            background: #1f6e6c;
+            color: white;
+            align-self: flex-end;
+        }
     </style>
 </head>
 <body>
@@ -180,7 +210,6 @@
     <div id="jobBoardPanel" class="panel"><h2><i class="fas fa-briefcase"></i> Job Board</h2><div id="jobBoardContainer"></div><div id="adminJobControls" style="display:none; margin-top:20px;"><hr><h3>Post New Job (Admin only)</h3><div class="form-row"><div class="form-group"><input type="text" id="jobTitle" placeholder="Job Title"></div><div class="form-group"><input type="text" id="jobLocation" placeholder="Location"></div></div><div class="form-row"><div class="form-group"><textarea id="jobDescription" rows="3" placeholder="Job Description"></textarea></div></div><div class="form-row"><div class="form-group"><input type="text" id="jobContact" placeholder="Contact info (email/phone)"></div></div><button onclick="postJob()"><i class="fas fa-plus"></i> Post Job</button></div></div>
     <div id="suggestionsPanel" class="panel"><h2><i class="fas fa-comment"></i> Suggestions / Feedback</h2><div id="suggestionsContainer"></div><hr><h3>Submit a Suggestion</h3><div class="form-row"><div class="form-group"><input type="text" id="suggestionName" placeholder="Your Name (optional)"></div></div><div class="form-row"><div class="form-group"><textarea id="suggestionText" rows="3" placeholder="Your suggestion..."></textarea></div></div><button onclick="submitSuggestion()"><i class="fas fa-paper-plane"></i> Submit Suggestion</button></div></div>
     
-    <!-- FOOTER -->
     <div class="company-footer">
         <div class="footer-line">
             © 2026 Safari Softwares. All rights reserved. &nbsp;&nbsp;&nbsp; Email: <a href="mailto:safarisoftwares@gmail.com">safarisoftwares@gmail.com</a>
@@ -261,7 +290,7 @@
     </div>
     <div class="worker-type-select"><label><input type="radio" name="workerType" value="regular" checked> Regular Worker</label>&nbsp;&nbsp;<label><input type="radio" name="workerType" value="intern"> Intern/Attachee</label></div>
     <button onclick="addWorker()">Add Worker</button>
-    <table id="workersTable"><thead><tr><th>Name</th><th>ID No.</th><th>Phone</th><th>Date</th><th>Job Title</th><th>Work Type</th><th>Days</th><th>Wage/Day</th><th>Total Wages</th><th>PAYE</th><th>NSSF</th><th>NHIF</th><th>Advance</th><th>Balance</th><th>Type</th><th>Actions</th></table></thead><tbody></tbody></table>
+    <table id="workersTable"><thead><tr><th>Name</th><th>ID No.</th><th>Phone</th><th>Date</th><th>Job Title</th><th>Work Type</th><th>Days</th><th>Wage/Day</th><th>Total Wages</th><th>PAYE (%)</th><th>NSSF (KES)</th><th>NHIF (KES)</th><th>Advance (KES)</th><th>Balance</th><th>Type</th><th>Actions</th></tr></thead><tbody></tbody></table>
 </div>
 <div id="subtabSiteNotes" class="subtab-content" style="display:none"><h3><i class="fas fa-pencil-alt"></i> Notes for this Site</h3><div class="form-row"><div class="form-group" style="flex:3"><textarea id="siteNoteContent" rows="2" placeholder="Add a note..."></textarea></div><button onclick="addSiteNote()"><i class="fas fa-save"></i> Save Note</button></div><div id="siteNotesListContainer" class="notes-list"></div></div>
 <div id="subtabGenerateInvoice" class="subtab-content" style="display:none"><h3><i class="fas fa-file-invoice-dollar"></i> Generate Invoice for this Site</h3><button id="invoiceButtonInModal" class="invoice-btn-modal" onclick="openInvoiceModalFromModal()" style="background:#27ae60; width:100%; margin-top:10px;"><i class="fas fa-file-pdf"></i> Click to Generate Invoice</button></div>
@@ -356,10 +385,18 @@ function openTermsModal() { document.getElementById('termsModal').style.display 
 function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'block'; bringToFront(document.getElementById('privacyModal')); }
 window.onclick = function(event) { if (event.target.classList.contains('modal')) event.target.style.display = 'none'; };
 function bringToFront(modalElement) { if (!modalElement) return; modalZCounter += 10; modalElement.style.zIndex = modalZCounter; }
-function openModalAndBringToFront(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.style.display = 'block'; bringToFront(modal); } }
+
+// FIXED: hide chat modal when opening any other modal
+function openModalAndBringToFront(modalId) {
+    document.getElementById('chatModal').style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+        bringToFront(modal);
+    }
+}
 function closeModalById(modalId) { const modal = document.getElementById(modalId); if (modal) modal.style.display = 'none'; }
 
-// Clear all login/signup/forgot input fields
 function clearLoginFields() {
     document.getElementById('loginUsername').value = '';
     document.getElementById('loginPassword').value = '';
@@ -430,7 +467,7 @@ async function logout() {
     document.getElementById('loginModal').style.display = 'flex';
     bringToFront(document.getElementById('loginModal'));
     showLoginTab('login');
-    clearLoginFields();  // Clear all username/password fields after logout
+    clearLoginFields();
 }
 async function checkSession() {
     const response = await fetch('/api/current_user');
@@ -1387,8 +1424,8 @@ async function loadUsersList() {
             assignedText = siteNames;
         }
         container.innerHTML += `<tr>
-            <td>${escapeHtml(u.fullName)}</td
-            <td>${escapeHtml(u.username)}</td
+            <td>${escapeHtml(u.fullName)}</td>
+            <td>${escapeHtml(u.username)}</td>
             <td><span class="role-badge ${u.role === 'admin' ? 'role-admin-badge' : 'role-foreman-badge'}">${u.role}</span></td>
             <td>${assignedText} ${u.role === 'foreman' ? `<button class="edit-foreman-btn" onclick="editForemanSites('${u.id}')">Edit Sites</button>` : ''}</td>
             <td>${u.id !== currentUser.id ? `<span class="danger-text" onclick="deleteUser('${u.id}')">Delete</span>` : '<span class="warning-text">You</span>'}</td>
@@ -1496,7 +1533,48 @@ function renderPublicJobBoard() {
     if (!window.jobs || window.jobs.length === 0) { container.innerHTML = '<p>No job openings at the moment</p>'; return; }
     container.innerHTML = window.jobs.map(job => `<div class="public-job-card"><h3>${escapeHtml(job.title)}</h3><p><strong>Location:</strong> ${escapeHtml(job.location)}</p><p>${escapeHtml(job.description)}</p><p><strong>Contact:</strong> ${escapeHtml(job.contact)}</p><p><small>Posted: ${new Date(job.date).toLocaleDateString()}</small></p></div>`).join('');
 }
-// ==================== RECOMMENDATION LETTER ====================
+// ==================== RECOMMENDATION LETTER (FIXED) ====================
+async function autoFillRecommendation() {
+    const type = document.getElementById('recPersonType').value;
+    const siteId = document.getElementById('recSiteSelect').value;
+    if (type === 'worker') {
+        const workerIdx = document.getElementById('recWorkerSelect').value;
+        if (workerIdx === '') return alert('Please select a worker');
+        const response = await fetch('/api/recommendation/autofill', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ personType: 'worker', siteId, workerIdx: parseInt(workerIdx) })
+        });
+        const data = await response.json();
+        if (data.name) {
+            document.getElementById('recJobTitle').value = data.jobTitle || '';
+            document.getElementById('recWorkType').value = data.workType || '';
+            document.getElementById('recSummary').value = data.summary || '';
+            if (!document.getElementById('recJoinDate').value && data.date) {
+                document.getElementById('recJoinDate').value = data.date;
+            }
+            const today = new Date().toISOString().split('T')[0];
+            if (!document.getElementById('recLeaveDate').value) {
+                document.getElementById('recLeaveDate').value = today;
+            }
+        } else {
+            alert('Could not autofill. Please try manually.');
+        }
+    } else if (type === 'intern') {
+        const internName = document.getElementById('recInternName').value;
+        if (internName) {
+            const nameWithApostrophe = internName.endsWith('s') ? `${internName}'` : `${internName}'s`;
+            document.getElementById('recSummary').value = `${nameWithApostrophe} internship was completed with commendable performance. He showed great willingness to learn and teamwork.`;
+            const today = new Date().toISOString().split('T')[0];
+            if (!document.getElementById('recLeaveDate').value) {
+                document.getElementById('recLeaveDate').value = today;
+            }
+            alert('Auto-filled for intern');
+        } else {
+            alert('Please enter intern name');
+        }
+    }
+}
 function toggleRecPersonFields() {
     const type = document.getElementById('recPersonType').value;
     document.getElementById('recWorkerDiv').style.display = type === 'worker' ? 'block' : 'none';
@@ -1510,38 +1588,6 @@ function updateWorkerSelectForRecommendation() {
     if (proj && proj.workers && proj.workers.length) {
         workerSelect.innerHTML = '<option value="">-- Select Worker --</option>' + proj.workers.map((w, idx) => `<option value="${idx}">${escapeHtml(w.name)} (${w.jobTitle || w.workType || 'General'})</option>`).join('');
     } else { workerSelect.innerHTML = '<option value="">No workers available</option>'; }
-}
-function autoFillRecommendation() {
-    const type = document.getElementById('recPersonType').value;
-    if (type === 'worker') {
-        const workerIdx = document.getElementById('recWorkerSelect').value;
-        const siteId = document.getElementById('recSiteSelect').value;
-        const proj = projects.find(p => p.id === siteId);
-        if (proj && workerIdx !== '' && proj.workers[parseInt(workerIdx)]) {
-            const worker = proj.workers[parseInt(workerIdx)];
-            const workerName = worker.name;
-            const nameWithApostrophe = workerName.endsWith('s') ? `${workerName}'` : `${workerName}'s`;
-            const jobTitle = worker.jobTitle || '';
-            const workType = worker.workType || '';
-            document.getElementById('recJobTitle').value = jobTitle;
-            document.getElementById('recWorkType').value = workType;
-            const summary = `${nameWithApostrophe} role included but not limited to ${workType}. He demonstrated excellent skills, punctuality, and dedication. He also completed assigned tasks efficiently.`;
-            document.getElementById('recSummary').value = summary;
-            if (!document.getElementById('recJoinDate').value && worker.date) { document.getElementById('recJoinDate').value = worker.date; }
-            const today = new Date().toISOString().split('T')[0];
-            if (!document.getElementById('recLeaveDate').value) { document.getElementById('recLeaveDate').value = today; }
-            alert('Auto-filled from worker record');
-        } else { alert('Please select a worker first'); }
-    } else if (type === 'intern') {
-        const internName = document.getElementById('recInternName').value;
-        if (internName) {
-            const nameWithApostrophe = internName.endsWith('s') ? `${internName}'` : `${internName}'s`;
-            document.getElementById('recSummary').value = `${nameWithApostrophe} internship was completed with commendable performance. He showed great willingness to learn and teamwork.`;
-            const today = new Date().toISOString().split('T')[0];
-            if (!document.getElementById('recLeaveDate').value) { document.getElementById('recLeaveDate').value = today; }
-            alert('Auto-filled for intern');
-        } else { alert('Please enter intern name'); }
-    }
 }
 async function generateRecommendationPDF() {
     if (currentUser.role !== 'system_admin' && currentUser.role !== 'admin') { alert('Only administrators can generate recommendation letters'); return; }
@@ -1587,6 +1633,7 @@ async function generateRecommendationPDF() {
     html2pdf().from(printDiv).set({ margin: 0, filename: `Recommendation_${personName.replace(/\s/g, '_')}.pdf` }).save().then(() => document.body.removeChild(printDiv));
     alert('Recommendation letter generated');
 }
+
 // ==================== DATA IMPORT/EXPORT ====================
 async function exportData() {
     const response = await fetch('/api/export/json');
@@ -1725,8 +1772,64 @@ function modalTabHandler(e) {
     document.querySelectorAll('.subtab-content').forEach(c => c.style.display = 'none');
     document.getElementById(`subtab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).style.display = 'block';
 }
-// Initialize
+// ==================== CHATBOT ====================
+function toggleChat() {
+    const modal = document.getElementById('chatModal');
+    if (modal.style.display === 'none' || modal.style.display === '') {
+        modal.style.display = 'flex';
+    } else {
+        modal.style.display = 'none';
+    }
+}
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+    addChatMessage(message, 'user');
+    input.value = '';
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        const data = await response.json();
+        addChatMessage(data.reply, 'bot');
+    } catch (err) {
+        addChatMessage('Sorry, I encountered an error. Please try again.', 'bot');
+    }
+}
+function addChatMessage(text, sender) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `chat-message ${sender}`;
+    div.innerHTML = text.replace(/\n/g, '<br>');
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+document.getElementById('chatInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendChatMessage();
+    }
+});
 checkSession();
 </script>
+<!-- Chatbot Widget -->
+<div id="chatButton" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <button onclick="toggleChat()" style="background: #1f6e6c; color: white; border-radius: 50px; width: 60px; height: 60px; font-size: 28px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"><i class="fas fa-comment-dots"></i></button>
+</div>
+<div id="chatModal" class="modal" style="display: none; position: fixed; bottom: 80px; right: 20px; width: 380px; max-width: 90%; background: white; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 1001; padding: 0; overflow: hidden;">
+    <div style="background: #0b2b3b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <span><i class="fas fa-robot"></i> ERP Assistant</span>
+        <button onclick="toggleChat()" style="background: none; border: none; color: white; font-size: 20px;">&times;</button>
+    </div>
+    <div id="chatMessages" style="height: 400px; overflow-y: auto; padding: 12px; background: #f9fafb; display: flex; flex-direction: column; gap: 10px;">
+        <div class="chat-message bot" style="background: #e2e8f0; padding: 8px 12px; border-radius: 18px; align-self: flex-start; max-width: 80%;">Hello! I'm your ERP assistant. You can ask me about projects, workers, finances, and more. Try "help".</div>
+    </div>
+    <div style="border-top: 1px solid #e2e8f0; padding: 12px; display: flex; gap: 8px;">
+        <input type="text" id="chatInput" placeholder="Ask me anything..." style="flex: 1; padding: 10px; border-radius: 24px; border: 1px solid #ccc;">
+        <button onclick="sendChatMessage()" style="background: #1f6e6c; border-radius: 50px; padding: 8px 16px;"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
 </body>
 </html>

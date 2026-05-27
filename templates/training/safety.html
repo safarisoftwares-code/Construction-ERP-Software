@@ -4,50 +4,33 @@
     <title>Safety Training</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { font-family: Arial; padding: 20px; background: #eef2f5; }
-        .container { max-width: 800px; margin: auto; background: white; border-radius: 20px; padding: 20px; }
-        .course { border-bottom: 1px solid #eee; padding: 15px 0; }
-        button { background: #1f6e6c; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; }
-        .form-group { margin: 10px 0; }
-        label { display: inline-block; width: 100px; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f5f7fa; }
+        .course-card { background: white; border-radius: 20px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .register-form input { margin: 6px 0; padding: 8px; width: 100%; border-radius: 8px; border: 1px solid #ccc; }
+        button { background: #1f6e6c; color: white; padding: 10px 20px; border: none; border-radius: 30px; cursor: pointer; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1><i class="fas fa-hard-hat"></i> Safety Training (Role: {{ user_role }})</h1>
-    <a href="/">← Back to Main Site</a>
-    <form method="POST" action="/training/safety/register" style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:20px;">
+    <h1><i class="fas fa-hard-hat"></i> Safety Training</h1>
+    <form action="/training/safety/register" method="post" class="register-form" style="max-width: 400px; background: #f0f0f0; padding: 20px; border-radius: 15px;">
         <h3>Register for Safety Training</h3>
-        <div class="form-group"><label>Full Name:</label> <input type="text" name="name" required></div>
-        <div class="form-group"><label>Worker ID:</label> <input type="text" name="worker_id" required></div>
-        <div class="form-group"><label>Phone:</label> <input type="tel" name="phone" required></div>
-        <div class="form-group"><label>Email:</label> <input type="email" name="email" required></div>
-        <div class="form-group"><label>Department:</label> <input type="text" name="department"></div>
+        <input type="text" name="name" placeholder="Full name" required>
+        <input type="text" name="worker_id" placeholder="Worker ID (optional)">
+        <input type="text" name="phone" placeholder="Phone">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="text" name="department" placeholder="Department">
         <button type="submit">Register</button>
     </form>
-    <hr>
-    {% for course in courses %}
-    <div class="course">
-        <h3>{{ course.title }}</h3>
-        {% if progress[course.id] and progress[course.id].completed %}
-            <p class="completed">✓ Completed - Expires: {{ progress[course.id].expiry }}</p>
-        {% else %}
-            <button onclick="completeSafety({{ course.id }})">Complete Training</button>
-        {% endif %}
-    </div>
-    {% endfor %}
-</div>
-<script>
-    function completeSafety(courseId) {
-        fetch(`/training/safety/complete/${courseId}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ score: 90 })
-        }).then(r => r.json()).then(data => {
-            if(data.success) location.reload();
-            else alert("You need a higher score to pass.");
-        });
-    }
-</script>
+    {% if courses %}
+        <h2>Your Courses</h2>
+        {% for c in courses %}
+        <div class="course-card">
+            <h3>{{ c.title }} (Pass Score: {{ c.pass_score }}%)</h3>
+            {% if c.video_url %}
+            <iframe width="100%" height="315" src="{{ c.video_url }}" frameborder="0" allowfullscreen></iframe>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% endif %}
 </body>
 </html>
