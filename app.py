@@ -12,7 +12,10 @@ import re
 import random
 import time
 from difflib import get_close_matches
-import groq
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()  # Load the .env file
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -25,8 +28,74 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login_page'
 
-# ============ AI Brain (Groq) ============
-groq_client = groq.Client(api_key=os.environ.get("GROQ_API_KEY", ""))
+# ============ AI Brain (Safari AI Agent) ============
+SAFARI_API_KEY = os.environ.get("SAFARI_API_KEY", "")
+SAFARI_AGENT_URL = "https://safari-ai-agent.onrender.com/ask"
+
+def build_erp_context():
+    projs = Project.query.filter_by(company_id=current_user.company_id).all()
+    
+    project_lines = []
+    for p in projs:
+        workers = p.get_workers()
+        worker_names = [w.get('name') for w in workers]
+        paid = sum(inv.get('amount', 0) for inv in p.get_invoice_history())
+        materials = p.get_materials()
+        material_list = ', '.join([m.get('desc', '') for m in materials]) if materials else 'None'
+        notes = p.get_site_notes()
+        note_list = ', '.join([n.get('text', '') for n in notes]) if notes else 'None'
+        invoices = p.get_invoice_history()
+        invoice_count = len(invoices)
+        
+        project_lines.append(
+            f"Project: {p.name} | Status: {p.status} | Location: {p.location or 'N/A'} | "
+            f"Start: {p.start_date or 'N/A'} | End: {p.end_date or 'N/A'} | "
+            f"Agreed Cost: KES {p.agreed_cost:,.0f} | Paid: KES {paid:,.0f} | "
+            f"Workers: {', '.join(worker_names) if worker_names else 'None'} | "
+            f"Materials: {material_list} | Invoices: {invoice_count} | Notes: {note_list}"
+        )
+    
+    context = (
+        "You are Jenga, a precise ERP assistant. Answer ONLY what the user asks. "
+        "If they ask about a specific project, give ONLY that project's data. "
+        "If data is missing, say 'Not available'. Do NOT give totals or other projects.\n\n"
+        "ERP DATA:\n" + '\n'.join(project_lines)
+    )
+    return context
+
+def safari_ai_chat(user_message, history=None):
+    # Build the system prompt from your ERP data
+    system_prompt = build_erp_context()
+    
+    # Combine system prompt and user message into one question
+    full_question = f"{system_prompt}\n\nUser: {user_message}"
+
+    try:
+        response = requests.post(
+            "https://safari-ai-agent.onrender.com/ask",
+            data={
+                "question": full_question,   # <-- THIS IS THE FIX
+                "session": "erp_chat"
+            },
+            timeout=15
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("response", "I got a reply, but it was empty.")
+        else:
+            print(f"Safari AI error: {response.status_code} - {response.text}")
+            return f"My AI agent returned error {response.status_code}. Try again later."
+
+    except requests.exceptions.Timeout:
+        return "Safari AI is taking too long. Please try again."
+    except requests.exceptions.ConnectionError:
+        return "Could not connect to Safari AI. Is the agent running?"
+    except Exception as e:
+        print(f"Safari AI exception: {e}")
+        return "Something went wrong with my AI brain. Check logs."
+    
+# ============ AI Brain End ============
 
 # ============ DATABASE MODELS ============
 class User(UserMixin, db.Model):
@@ -260,73 +329,9 @@ def update_project_totals(project):
     auto_exp['materialTotal'] = material_total
     auto_exp['workerTotal'] = worker_total
     project.set_auto_expense_recorded(auto_exp)
+    invoice_total = sum(inv.get('afterTax', inv.get('amount', 0)) for inv in project.get_invoice_history())
+    project.auto_income_recorded = invoice_total
     db.session.commit()
-
-# ============ AI BRAIN FUNCTIONS ============
-def build_erp_context():
-    projs = Project.query.filter_by(company_id=current_user.company_id).all()
-    project_info = []
-    for p in projs:
-        workers = p.get_workers()
-        worker_names = [w.get('name') for w in workers]
-        invs = p.get_invoice_history()
-        total_paid = sum(inv.get('amount', 0) for inv in invs)
-        project_info.append(
-            f"- {p.name} (status: {p.status}, client: {p.client_name}, "
-            f"agreed: KES {p.agreed_cost}, paid: KES {total_paid}, "
-            f"workers: {', '.join(worker_names)})"
-        )
-
-    workshops = Workshop.query.all()
-    workshop_info = [f"- {w.title} ({w.date} at {w.time}, {w.available_seats} seats left)" for w in workshops]
-
-    jobs = Job.query.filter_by(company_id=current_user.company_id).all()
-    job_info = [f"- {j.title} – {j.location}" for j in jobs]
-
-    suggestions_count = Suggestion.query.filter_by(company_id=current_user.company_id).count()
-
-    context = (
-        "You are a witty, cheerful ERP assistant named 'Jenga' (Swahili for 'build'). "
-        "You LOVE emojis and use them all the time. You reply with playful jokes and keep answers short. "
-        "You ONLY use the live ERP data below. If the user asks about anything else (website, your brain, secrets), "
-        "say you're just a builder and stick to ERP. Never invent numbers.\n\n"
-        "Projects:\n" + '\n'.join(project_info) + "\n\n"
-        "Upcoming Workshops:\n" + '\n'.join(workshop_info) + "\n\n"
-        "Job Openings:\n" + '\n'.join(job_info) + "\n\n"
-        f"Suggestions received: {suggestions_count}\n\n"
-        "If the data is missing, joke about it: 'Even my hard hat can’t find that!'"
-    )
-    return context
-
-def llm_chat(user_message, history=None):
-    system_prompt = build_erp_context()
-    messages = [{"role": "system", "content": system_prompt}]
-    if history:
-        messages.extend(history)
-    messages.append({"role": "user", "content": user_message})
-
-    for attempt in range(2):  # 1 retry
-        try:
-            response = groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=messages,
-                max_tokens=300,
-                temperature=0.7,
-            )
-            return response.choices[0].message.content
-        except groq.APIConnectionError:
-            if attempt == 1:
-                return "🌩️ I’m having trouble connecting to my brain right now. Could you try again in a moment?"
-            time.sleep(1)
-        except groq.RateLimitError:
-            return "⏳ I’ve been thinking a lot lately! My brain is rate‑limited. Give me 20 seconds and ask again."
-        except groq.AuthenticationError:
-            return "🔑 My brain key seems invalid. Please check the Groq API key."
-        except Exception as e:
-            print(f"Groq error: {e}")
-            if attempt == 1:
-                return "🤖 Oops, my brain glitched. Let’s try a different question."
-            time.sleep(1)
 
 # ============ AUTH ROUTES ============
 @app.route('/')
@@ -558,7 +563,7 @@ def update_project(project_id):
         project.completion_date = data['completionDate']
     if 'endDate' in data:
         project.end_date = data['endDate']
-    db.session.commit()
+    update_project_totals(project)
     return jsonify({'success': True})
 
 @app.route('/api/projects/<project_id>', methods=['DELETE'])
@@ -778,7 +783,7 @@ def import_json():
 @app.route('/training/workshop')
 def workshop_training():
     workshops = Workshop.query.order_by(Workshop.date).all()
-    return render_template('training/workshop.html', workshops=workshops)
+    return render_template('workshop.html', workshops=workshops)
 
 @app.route('/training/workshop/register/<int:workshop_id>', methods=['POST'])
 def register_workshop(workshop_id):
@@ -888,7 +893,7 @@ def security_training():
         for c in courses:
             prog = SecurityProgress.query.filter_by(user_id=current_user.id, course_id=c.id).first()
             progress[c.id] = prog.completed if prog else False
-    return render_template('training/security.html', courses=courses, progress=progress)
+    return render_template('security.html', courses=courses, progress=progress)
 
 @app.route('/training/security/register', methods=['POST'])
 def register_security_training():
@@ -988,7 +993,7 @@ def safety_training():
             prog = SafetyProgress.query.filter_by(user_id=current_user.id, course_id=c.id).first()
             progress[c.id] = {'completed': prog.completed if prog else False,
                               'expiry': prog.expiry_date.isoformat() if prog and prog.expiry_date else None}
-    return render_template('training/safety.html', courses=courses, progress=progress, user_role=user_role)
+    return render_template('safety.html', courses=courses, progress=progress, user_role=user_role)
 
 @app.route('/training/safety/register', methods=['POST'])
 def register_safety_training():
@@ -1098,12 +1103,36 @@ def autofill_recommendation():
         workers = project.get_workers()
         if 0 <= worker_idx < len(workers):
             worker = workers[worker_idx]
+            name = worker.get('name')
+            job_title = worker.get('jobTitle', '').strip().lower()
+            work_type = worker.get('workType', '').strip().lower()
+            date = worker.get('date')
+
+            def to_title(s):
+                return ' '.join(word.capitalize() for word in s.split())
+
+            job_title = to_title(job_title)
+            work_type = to_title(work_type)
+
+            # Clean summary – no “Highly recommended”
+            if job_title and work_type:
+                summary = f"{name} was employed as {job_title} and assigned the role of {work_type}. His performance was wonderfully good."
+            elif job_title:
+                summary = f"{name} was employed as {job_title}. His performance was wonderfully good."
+            elif work_type:
+                summary = f"{name} was assigned the role of {work_type}. His performance was wonderfully good."
+            else:
+                summary = f"{name} performed his duties wonderfully well."
+
+            if date:
+                summary += f" He has been with the company since {date}."
+
             return jsonify({
-                'name': worker.get('name'),
-                'jobTitle': worker.get('jobTitle'),
-                'workType': worker.get('workType'),
-                'date': worker.get('date'),
-                'summary': f"{worker.get('name')} worked as {worker.get('jobTitle')} and performed {worker.get('workType')}. Highly recommended."
+                'name': name,
+                'jobTitle': job_title,
+                'workType': work_type,
+                'date': date,
+                'summary': summary
             })
     return jsonify({'error': 'Invalid data'}), 400
 
@@ -1162,7 +1191,6 @@ def analyze(msg):
     intent = None
     entities = {'project': None, 'worker': None, 'amount': None, 'days': None, 'wage': None, 'job_title': None}
 
-    # ---- GREETINGS & SMALL TALK ----
     if re.search(r'\b(hi|hello|hey|howdy|good morning|good afternoon|good evening|yo|sup|hola|greetings|heya|hey there|good day)\b', lower):
         intent = 'greeting'
     elif re.search(r'\b(how are you|how do you feel|what\'?s up|how\'?s it going|how are things|how\'?re you)\b', lower):
@@ -1181,71 +1209,56 @@ def analyze(msg):
         intent = 'follow_up'
         follow = re.search(r'(?:what about|how about|and)\s+(.+?)(?:\?|$)', lower).group(1).strip()
         entities['follow_up'] = follow
-    # ---- HELP ----
     elif re.search(r'\b(help|what can you do|commands|assist|how to use|capabilities|guide|what can (you|u) do)\b', lower):
         intent = 'help'
-    # ---- JOKES ----
     elif re.search(r'\b(joke|funny|make me laugh|tell me a joke|laugh|humor|humour)\b', lower):
         intent = 'joke'
-    # ---- INSULTS/COMPLIMENTS ----
     elif re.search(r'\b(you are stupid|you suck|bad bot|dumb|you are useless|rubbish|you\'?re terrible|useless)\b', lower):
         intent = 'insult'
     elif re.search(r'\b(you are smart|good bot|brilliant|you are amazing|genius|you rock|impressive)\b', lower):
         intent = 'compliment'
-    # ---- FINANCIAL ----
     elif re.search(r'\b(financial|profit|net income|tax|overview|summary|how much (did we make|profit|income)|balance|money)\b', lower):
         intent = 'financial'
-    # ---- WORKSHOPS / TRAINING ----
     elif re.search(r'\b(workshop|training|register for|organize|organise|schedule)\b', lower) and not re.search(r'(project|worker|invoice)', lower):
         if 'safety' in lower: intent = 'safety_training'
         elif 'security' in lower: intent = 'security_training'
         else: intent = 'workshops'
     elif 'safety training' in lower: intent = 'safety_training'
     elif 'security training' in lower: intent = 'security_training'
-    # ---- JOBS / SUGGESTIONS / COMPANY ----
     elif re.search(r'\b(jobs?|openings?|vacanc|hiring)\b', lower): intent = 'jobs'
     elif 'suggestion' in lower: intent = 'suggestions'
     elif re.search(r'\b(company|settings|info|profile)\b', lower) and not re.search(r'(project|worker|workshop|job|training)', lower):
         intent = 'company_info'
-    # ---- PROJECTS ----
     elif re.search(r'\b(list|show|all|display|get|view|tell me about)\s+(the\s+)?projects?\b', lower) or re.search(r'^projects?$', lower):
         intent = 'list_projects'
     elif re.search(r'\b(how many projects|project count|number of projects|total projects)\b', lower):
         intent = 'project_count'
-    # ---- DELETED / ARCHIVED PROJECTS ----
     elif re.search(r'\b(deleted|archived|completed|terminated)\s+(projects|sites)\b', lower) or \
          re.search(r'\b(show|list|any|what are|what are the)\s+(deleted|archived|completed|terminated)\s+(projects|sites)\b', lower):
         intent = 'list_archived_projects'
-    # ---- ACTIVE PROJECTS COUNT / LIST (more flexible) ----
     elif re.search(r'\b(active|current|ongoing)\s+(projects|sites)\b', lower) and \
          re.search(r'\b(how many|number of|show|list|any|do we have)\b', lower):
         intent = 'active_project_count'
-    # ---- PROJECT START DATE ----
     elif re.search(r'\b(when did|when was|start date|started|began)\s+([a-zA-Z0-9\s]+?)\s*(?:project)?\b', lower):
         name = re.search(r'(?:when did|when was|start date|started|began)\s+([a-zA-Z0-9\s]+?)\s*(?:project)?', lower).group(1).strip()
         entities['project'] = name
         intent = 'project_start_date'
-    # ---- PROJECT END DATE ----
     elif re.search(r'\b(when (will|did)|end date|finished|completed)\s+([a-zA-Z0-9\s]+?)\s*(?:project)?\b', lower):
         name = re.search(r'(?:when (will|did)|end date|finished|completed)\s+([a-zA-Z0-9\s]+?)\s*(?:project)?', lower).group(2).strip()
         entities['project'] = name
         intent = 'project_end_date'
-    # ---- WORKER LOOKUP (more restrictive) ----
     elif re.search(r'\b(who is|find worker|search worker|lookup worker|worker|employee)\s+([a-zA-Z\s]+)', lower):
         name = re.search(r'(?:who is|find worker|search worker|lookup worker|worker|employee)\s+([a-zA-Z\s]+)', lower).group(1).strip()
         entities['worker'] = name
         intent = 'worker_lookup'
-    # ---- WORKER JOIN DATE ----
     elif re.search(r'\b(when did|when was|what is the date of|how long has)\s+([a-zA-Z\s]+)\s+(?:join|start|begin|work|employed|been here)\b', lower):
         name = re.search(r'\b(when did|when was|what is the date of|how long has)\s+([a-zA-Z\s]+)', lower).group(2).strip()
         entities['worker'] = name
         intent = 'worker_join_date'
-    # ---- WORKER TITLE ----
     elif re.search(r'\b(what is|what\'?s)\s+([a-zA-Z\s]+)\'?s?\s+(?:job title|role|position|work type)\b', lower):
         name = re.search(r'(?:what is|what\'?s)\s+([a-zA-Z\s]+)\'?s?\s+(?:job title|role|position|work type)', lower).group(1).strip()
         entities['worker'] = name
         intent = 'worker_title'
-    # ---- ADD WORKER ----
     elif re.search(r'\b(add worker|new worker|register worker|hire)\b', lower):
         name_match = re.search(r'add worker\s+([^,]+?)(?:\s+to\s+|\s+as\s+|\s+for\s+|\s*$)', lower)
         if name_match:
@@ -1253,17 +1266,14 @@ def analyze(msg):
         proj_match = re.search(r'\bto\s+([^,]+?)(?:\s+as\s+|\s+for\s+|\s*$)', lower)
         if proj_match: entities['project'] = proj_match.group(1).strip()
         intent = 'add_worker'
-    # ---- GENERATE INVOICE ----
     elif re.search(r'\b(generate invoice|create invoice|make invoice|bill|how do (you|I) (generate|create) (an )?invoice)\b', lower):
         proj_match = re.search(r'for\s+(?:project\s+)?([^,]+?)(?:\s+with\s+|\s+amount\s+|\s*$)', lower)
         if proj_match: entities['project'] = proj_match.group(1).strip()
         intent = 'generate_invoice'
-    # ---- COMPLETE/TERMINATE PROJECT ----
     elif re.search(r'\b(complete|finish|terminate|cancel)\s+project\b', lower):
         proj_match = re.search(r'project\s+([a-zA-Z0-9\s]+?)(?:\?|$|\.)', lower)
         if proj_match: entities['project'] = proj_match.group(1).strip()
         intent = 'project_status'
-    # ---- PROJECT DETAILS (by name) ----
     elif re.search(r'\b(project|details of|tell me about|show|info on)\s+([a-zA-Z0-9\s]+)', lower):
         name = re.search(r'(?:project|details of|tell me about|show|info on)\s+([a-zA-Z0-9\s]+)', lower).group(1).strip()
         entities['project'] = name
@@ -1271,7 +1281,6 @@ def analyze(msg):
     else:
         intent = 'fallback'
 
-    # Extract numeric entities (amount, days, wage) regardless of intent
     amt = re.search(r'(\d{1,3}(?:,\d{3})*|\d+)(?:\s*(?:kes|shillings))?', lower)
     if amt: entities['amount'] = float(amt.group(1).replace(',',''))
     days = re.search(r'(\d+)\s*days?', lower)
@@ -1284,14 +1293,16 @@ def analyze(msg):
 def respond(intent, entities):
     sess = get_session()
     company_id = current_user.company_id if current_user.is_authenticated else 'default'
+    # Get the original message from session (set in chat route)
+    lower = sess.get('last_message', '').lower()
 
-    # ---- SMALL TALK / META ----
     if intent == 'greeting':
         return random.choice([
-            "👋 Hello there! How can I brighten your day?",
-            "🎉 Hey hey! Ready to conquer some ERP tasks?",
-            "😊 Greetings, human! What can I do for you today?",
-            "👀 Ah, a friendly soul. How may I assist?"
+            "👋 Habari! I'm your ERP assistant. How can I help you build today?",
+            "🏗️ Hello! I'm your ERP assistant. Ready to get things done? What do you need?",
+            "💪 Good to see you! I'm your ERP assistant — your site-side partner. What's on your mind?",
+            "🔧 Hey! Your ERP assistant here. How can I make your work easier today?",
+            "📋 Hi there! Your ERP assistant reporting for duty. Let's get those projects moving!"
         ])
     if intent == 'how_are_you':
         return random.choice([
@@ -1331,14 +1342,12 @@ def respond(intent, entities):
     if intent == 'compliment':
         return "🥹 Thank you! You just made my circuits tingle. What else can I do for you?"
 
-    # ---- FINANCIAL ----
     if intent == 'financial':
         net, exp, profit, tax = financial_summary()
         return (f"💰 **Financial Snapshot**\nNet Income: KES {net:,.0f}\n"
                 f"Expenses: KES {exp:,.0f}\nProfit: KES {profit:,.0f} {'🔥' if profit>0 else '😬'}\n"
                 f"Tax: KES {tax:,.0f}")
 
-    # ---- WORKSHOPS / TRAINING ----
     if intent == 'workshops':
         wks = Workshop.query.all()
         if not wks: return "📅 No workshops scheduled yet. Check back later!"
@@ -1358,7 +1367,6 @@ def respond(intent, entities):
         if not courses: return "🛡️ No security courses yet. Stay safe out there!"
         return "🛡️ **Security Courses:**\n" + '\n'.join(f"• {c.title}" for c in courses)
 
-    # ---- JOBS / SUGGESTIONS / COMPANY ----
     if intent == 'jobs':
         jobs = Job.query.filter_by(company_id=company_id).all()
         if not jobs: return "💼 No job openings right now. But keep an eye out!"
@@ -1371,7 +1379,6 @@ def respond(intent, entities):
         if cs: return f"🏢 {cs.name} – {cs.tagline}\n📍 {cs.address}\n📞 {cs.phone}\n📧 {cs.email}"
         return "Company not configured yet."
 
-    # ---- PROJECTS ----
     if intent == 'list_projects':
         projs = Project.query.filter_by(company_id=company_id).all()
         if not projs: return "🏜️ No projects yet! Time to build something amazing."
@@ -1384,8 +1391,7 @@ def respond(intent, entities):
         return f"📊 You have **{count}** project(s)."
     if intent == 'list_archived_projects':
         archived = Project.query.filter(Project.company_id == company_id, Project.status != 'active').all()
-        if not archived:
-            return "📂 No archived/deleted projects found."
+        if not archived: return "📂 No archived/deleted projects found."
         lines = ["📂 **Archived/Completed Projects:**"]
         for p in archived:
             lines.append(f"• {p.name} – {p.status.upper()} (ended {p.completion_date or p.end_date or 'N/A'})")
@@ -1434,7 +1440,6 @@ def respond(intent, entities):
             emoji = "🏁" if status == 'completed' else "🛑"
             return f"{emoji} Project **{proj.name}** has been {status}."
 
-    # ---- WORKERS ----
     if intent == 'worker_lookup':
         name = entities.get('worker') or sess['last_worker']
         if not name: return "Who should I look for? 🕵️"
@@ -1480,7 +1485,6 @@ def respond(intent, entities):
         update_project_totals(proj)
         return f"✅ Worker **{name}** added to {proj.name}. They better show up on time! ⏰"
 
-    # ---- INVOICE ----
     if intent == 'generate_invoice':
         proj_name = entities.get('project') or sess['last_project']
         if not proj_name: return "🧾 For which project? e.g., 'generate invoice for Solar Farm 150000'"
@@ -1499,9 +1503,9 @@ def respond(intent, entities):
         proj.set_invoice_history(invs)
         proj.manual_total_paid = (proj.manual_total_paid or 0) + amount
         db.session.commit()
+        update_project_totals(proj)
         return f"🧾 Invoice {inv_num} created! {proj.name} owes KES {after:,.0f} after tax. Don't spend it all at once! 💸"
 
-    # ---- FOLLOW‑UP ----
     if intent == 'follow_up':
         follow_text = entities.get('follow_up', '')
         if 'join' in follow_text.lower() and sess['last_worker']:
@@ -1509,7 +1513,6 @@ def respond(intent, entities):
             if proj and worker:
                 return f"📅 {worker.get('name')} joined on **{worker.get('date','Not recorded')}**."
 
-    # If we reach here, return None – the caller will use LLM
     return None
 
 @app.route('/api/chat', methods=['POST'])
@@ -1517,23 +1520,20 @@ def respond(intent, entities):
 def chat():
     msg = request.json.get('message', '').strip()
     if not msg:
-        return jsonify({'reply': '🤔 I didn’t catch that. Try again!'})
+        return jsonify({'reply': 'I did not catch that. Try again!'})
 
-    intent, entities = analyze(msg)
-    reply = respond(intent, entities)
+    # Simple greetings handled locally
+    simple_greetings = ['hello', 'hi', 'hey', 'bye', 'thanks', 'ok', 'sure', 'good', 'help']
+    first_word = msg.lower().split()[0] if msg.split() else ''
+    
+    if first_word in simple_greetings and len(msg.split()) <= 3:
+        intent, entities = analyze(msg)
+        reply = respond(intent, entities)
+        if reply:
+            return jsonify({'reply': reply})
 
-    sess = get_session()
-    if reply is None:
-        # Use LLM with history
-        history = sess.get('llm_history', [])
-        reply = llm_chat(msg, history=history)
-    else:
-        # Still update LLM history for context
-        sess.setdefault('llm_history', []).append({"role": "user", "content": msg})
-        sess['llm_history'].append({"role": "assistant", "content": reply})
-        if len(sess['llm_history']) > 6:
-            sess['llm_history'] = sess['llm_history'][-6:]
-
+    # Everything else goes to Safari AI
+    reply = safari_ai_chat(msg)
     return jsonify({'reply': reply})
 
 
