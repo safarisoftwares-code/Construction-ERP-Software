@@ -1672,7 +1672,31 @@ document.getElementById('csvImportFile').addEventListener('change', (e) => { ale
 // ==================== DELETE SITES ====================
 function promptDeleteSitePassword() { if (currentUser.role !== 'system_admin') { alert('Only System Admin can delete sites'); return; } deleteSiteAccessGranted = false; document.getElementById('deleteSitePassword').value = ''; document.getElementById('passwordError').style.display = 'none'; openModalAndBringToFront('passwordPromptModal'); }
 function closePasswordPrompt() { closeModalById('passwordPromptModal'); }
-async function verifyDeleteSitePassword() { deleteSiteAccessGranted = true; closePasswordPrompt(); switchPanel('deleteSitePanel'); renderDeleteSitesList(); }
+async function verifyDeleteSitePassword() {
+    const pwd = document.getElementById('deleteSitePassword').value;
+    const errDiv = document.getElementById('passwordError');
+    errDiv.style.display = 'none';
+    try {
+        const res = await fetch('/api/verify_password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password: pwd })
+        });
+        const data = await res.json();
+        if (data.valid) {
+            deleteSiteAccessGranted = true;
+            closePasswordPrompt();
+            switchPanel('deleteSitePanel');
+            renderDeleteSitesList();
+        } else {
+            errDiv.innerText = 'Incorrect password';
+            errDiv.style.display = 'block';
+        }
+    } catch (e) {
+        errDiv.innerText = 'Network error';
+        errDiv.style.display = 'block';
+    }
+}
 function renderDeleteSitesList() {
     const container = document.getElementById('deleteSitesListContainer');
     if (projects.length === 0) { container.innerHTML = '<p>No projects</p>'; return; }

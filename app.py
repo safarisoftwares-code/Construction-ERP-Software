@@ -444,6 +444,13 @@ def reset_password():
     db.session.commit()
     return jsonify({'success': True, 'message': 'Password reset successfully'})
 
+@app.route('/api/verify_password', methods=['POST'])
+@login_required(role='system_admin')
+def verify_password():
+    pwd = (request.json or {}).get('password', '')
+    return jsonify({'valid': current_user.check_password(pwd)})
+
+
 @app.route('/api/change_password', methods=['POST'])
 @login_required()
 def change_password():
