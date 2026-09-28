@@ -12,3 +12,6 @@ instance/
 *.log
 err.log
 out.log
+
+# Temp migration scripts
+_*.py

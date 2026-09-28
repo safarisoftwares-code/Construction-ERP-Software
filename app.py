@@ -22,7 +22,15 @@ _secret = os.environ.get('SECRET_KEY')
 if not _secret:
     raise RuntimeError('SECRET_KEY is not set in environment. Refusing to start with a random key.')
 app.config['SECRET_KEY'] = _secret
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///erp_system.db'
+_db_url = os.environ.get('DATABASE_URL')
+if _db_url:
+    # Render Postgres or any DATABASE_URL. Fix postgres:// -> postgresql:// if needed.
+    if _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
+else:
+    # Fallback to local SQLite for offline development
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///erp_system.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 
