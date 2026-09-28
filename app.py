@@ -187,8 +187,8 @@ class CompanySetting(db.Model):
     __tablename__ = 'company_settings'
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.String(50), default='default', unique=True)
-    name = db.Column(db.String(200), default='Your Company')
-    tagline = db.Column(db.String(200), default='Construction & Electrical Services')
+    name = db.Column(db.String(200), default='BuildCore')
+    tagline = db.Column(db.String(200), default='Connecting the Jobsite to the Office.')
     address = db.Column(db.String(200), default='Nairobi, Kenya')
     po_box = db.Column(db.String(100), default='P.O. Box 12345')
     email = db.Column(db.String(100), default='info@yourcompany.com')
