@@ -18,7 +18,10 @@ from dotenv import load_dotenv
 load_dotenv()  # Load the .env file
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+_secret = os.environ.get('SECRET_KEY')
+if not _secret:
+    raise RuntimeError('SECRET_KEY is not set in environment. Refusing to start with a random key.')
+app.config['SECRET_KEY'] = _secret
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///erp_system.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
