@@ -88,7 +88,7 @@ def safari_ai_chat(user_message, history=None):
                 "question": full_question,   # <-- THIS IS THE FIX
                 "session": "erp_chat"
             },
-            timeout=15
+            timeout=60
         )
 
         if response.status_code == 200:
